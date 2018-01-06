@@ -161,30 +161,28 @@ namespace OppaiSharp
                 Type = (HitObjectType)int.Parse(Setlastpos(s[3]))
             };
 
-            switch (obj.Type) {
-                case HitObjectType.Circle:
-                    ++Beatmap.CountCircles;
-                    obj.Data = new Circle {
-                        Position = new Vector2 {
-                            X = double.Parse(Setlastpos(s[0])),
-                            Y = double.Parse(Setlastpos(s[1]))
-                        }
-                    };
-                    break;
-                case HitObjectType.Spinner:
-                    Beatmap.CountSpinners++;
-                    break;
-                case HitObjectType.Slider:
-                    Beatmap.CountSliders++;
-                    obj.Data = new Slider {
-                        Position = {
-                            X = double.Parse(Setlastpos(s[0])),
-                            Y = double.Parse(Setlastpos(s[1]))
-                        },
-                        Repetitions = int.Parse(Setlastpos(s[6])),
-                        Distance = double.Parse(Setlastpos(s[7]))
-                    };
-                    break;
+            if ((obj.Type & HitObjectType.Circle) != 0) {
+                Beatmap.CountCircles++;
+                obj.Data = new Circle {
+                    Position = new Vector2 {
+                        X = double.Parse(Setlastpos(s[0])),
+                        Y = double.Parse(Setlastpos(s[1]))
+                    }
+                };
+            }
+            if ((obj.Type & HitObjectType.Spinner) != 0) {
+                Beatmap.CountSpinners++;
+            }
+            if ((obj.Type & HitObjectType.Slider) != 0) {
+                Beatmap.CountSliders++;
+                obj.Data = new Slider {
+                    Position = {
+                        X = double.Parse(Setlastpos(s[0])),
+                        Y = double.Parse(Setlastpos(s[1]))
+                    },
+                    Repetitions = int.Parse(Setlastpos(s[6])),
+                    Distance = double.Parse(Setlastpos(s[7]))
+                };
             }
 
             Beatmap.Objects.Add(obj);
@@ -206,7 +204,7 @@ namespace OppaiSharp
 
             while ((line = reader.ReadLine()) != null) {
                 lastLine = line;
-                ++lastLineNumber;
+                lastLineNumber++;
 
                 //comments (according to lazer)
                 if (line.StartsWith(" ") || line.StartsWith("_")) {
@@ -225,7 +223,7 @@ namespace OppaiSharp
 
                 //[SectionName]
                 if (line.StartsWith("[")) {
-                    section = line.Substring(1, line.Length - 1);
+                    section = line.Substring(1, line.Length - 2);
                     continue;
                 }
 

@@ -120,7 +120,7 @@ namespace OppaiSharp
                 AR = baseAR,
                 OD = baseOD
             };
-            MapStats.ModsApply(mods, mapstats, ModApplyFlags.ApplyAR | ModApplyFlags.ApplyOD);
+            mapstats = MapStats.ModsApply(mods, mapstats, ModApplyFlags.ApplyAR | ModApplyFlags.ApplyOD);
 
             /* ar bonus -------------------------------------------- */
             double arBonus = 1.0;

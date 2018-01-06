@@ -59,7 +59,7 @@ namespace OppaiSharp
             Reset();
 
             var mapstats = new MapStats {CS = Beatmap.CS};
-            MapStats.ModsApply(mods, mapstats, ModApplyFlags.ApplyCS);
+            mapstats = MapStats.ModsApply(mods, mapstats, ModApplyFlags.ApplyCS);
             speedMul = mapstats.Speed;
 
             double radius = (PlayfieldWidth / 16.0) * (1.0 - 0.7 * (mapstats.CS - 5.0) / 5.0);
@@ -81,17 +81,13 @@ namespace OppaiSharp
                 else {
                     Vector2 pos;
 
-                    switch (obj.Type) {
-                        case HitObjectType.Slider:
-                            pos = ((Slider)obj.Data).Position;
-                            break;
-                        case HitObjectType.Circle:
-                            pos = ((Circle)obj.Data).Position;
-                            break;
-                        default:
-                            //TODO: warn $"W: unknown object type {obj.Type:X8}\n"
-                            pos = new Vector2();
-                            break;
+                    if ((obj.Type & HitObjectType.Slider) != 0)
+                        pos = ((Slider)obj.Data).Position;
+                    else if ((obj.Type & HitObjectType.Circle) != 0)
+                        pos = ((Circle)obj.Data).Position;
+                    else {
+                        //TODO: warn $"W: unknown object type {obj.Type:X8}\n"
+                        pos = new Vector2();
                     }
 
                     obj.Normpos = new Vector2(pos) * scalingFactor;
