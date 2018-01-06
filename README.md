@@ -15,7 +15,8 @@ var beatmap = new Parser().Map(reader);
 //calculate star ratings for HDDT
 Mods mods = Mods.Hidden | Mods.DoubleTime;
 var stars = new DiffCalc().Calc(beatmap, mods);
-Console.WriteLine($"Star rating: {stars.Total:F2} (aim stars: {stars.Aim:F2}, speed stars: {stars.Speed:F2})");
+Console.WriteLine(string.Format("Star rating: {0:F2} (aim stars: {1:F2}, speed stars: {2:F2})", 
+    stars.Total, stars.Aim, stars.Speed));
 
 //calculate the PP value for a play
 var pp = new PPv2(new PPv2Parameters {
@@ -27,5 +28,6 @@ var pp = new PPv2(new PPv2Parameters {
     Count50 = 0,
     CountMiss = 0,
 });
-Console.WriteLine($"Play is worth {pp.Total:F2}pp ({pp.Aim:F2} aim pp, {pp.Acc:F2} acc pp, {pp.Speed:F2} speed pp) and has an accuracy of {pp.ComputedAccuracy.Value() * 100:F2}");
+Console.WriteLine(string.Format("Play is worth {0:F2}pp ({1:F2} aim pp, {2:F2} acc pp, {3:F2} speed pp) and has an accuracy of {4:F2}", 
+    pp.Total, pp.Aim, pp.Acc, pp.Speed, pp.ComputedAccuracy.Value() * 100));
 ```
