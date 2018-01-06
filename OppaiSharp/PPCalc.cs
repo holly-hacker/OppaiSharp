@@ -5,33 +5,33 @@ namespace OppaiSharp
     public class PPv2Parameters
     {
         /// <summary> 
-        /// If not null, max_combo, nsliders, ncircles, nobjects, base_ar, base_od will be obtained from this beatmap.
+        /// If not null, MaxCombo, CountSliders, CountCircles, CountObjects, BaseAR, BaseOD will be obtained from this beatmap.
         /// </summary>
-        public Map Beatmap = null;
+        public Beatmap Beatmap = null;
 
         public double AimStars = 0.0;
         public double SpeedStars = 0.0;
         public int MaxCombo = 0;
-        public int Nsliders = 0, Ncircles = 0, Nobjects = 0;
+        public int CountSliders = 0, CountCircles = 0, CountObjects = 0;
 
         /// <summary> the base AR (before applying mods). </summary>
-        public float BaseAr = 5.0f;
+        public float BaseAR = 5.0f;
 
         /// <summary> the base OD (before applying mods) </summary>
-        public float BaseOd = 5.0f;
+        public float BaseOD = 5.0f;
 
         /// <summary> gamemode </summary>
         public GameMode Mode = GameMode.Standard;
 
-        /// <summary> the mods bitmask, same as osu! api, see MODS_* constants </summary>
+        /// <summary> the mods </summary>
         public Mods Mods = Mods.NoMod;
 
-        /// <summary> the maximum combo achieved, if -1 it will default to max_combo - nmiss </summary>
+        /// <summary> the maximum combo achieved, if -1 it will default to MaxCombo - CountMiss </summary>
         public int Combo = -1;
 
-        /// <summary> number of 300s, if -1 it will default to nobjects - Count100 - Count50 - nmiss </summary>
-        public int N300 = -1;
-        public int N100 = 0, N50 = 0, Nmiss = 0;
+        /// <summary> number of 300s, if -1 it will default to CountObjects - Count100 - Count50 - nmiss </summary>
+        public int Count300 = -1;
+        public int Count100 = 0, Count50 = 0, CountMiss = 0;
 
         /// <summary> scorev1 (1) or scorev2 (2) </summary>
         public int ScoreVersion = 1;
@@ -39,18 +39,21 @@ namespace OppaiSharp
 
     public class PPv2
     {
-        public double Total, Aim, Speed, Acc;
-        public Accuracy ComputedAccuracy;
+        public double Total { get; }
+        public double Aim { get; }
+        public double Speed { get; }
+        public double Acc { get; }
+        public Accuracy ComputedAccuracy { get; }
 
         /// <summary>
-        /// calculates ppv2, results are stored in total, aim, speed, acc, acc_percent.
+        /// calculates ppv2, results are stored in Total, Aim, Speed, Acc, AccPercent.
         /// See: <seealso cref="PPv2Parameters"/>
         /// </summary>
         private PPv2(double aimStars, double speedStars,
             int maxCombo, int countSliders, int countCircles, int countObjects,
             float baseAR, float baseOD, GameMode mode, Mods mods,
             int combo, int count300, int count100, int count50, int countMiss,
-            int scoreVersion, Map beatmap)
+            int scoreVersion, Beatmap beatmap)
         {
             if (beatmap != null) {
                 mode = beatmap.Mode;
@@ -134,7 +137,7 @@ namespace OppaiSharp
             }
 
             /* aim pp ---------------------------------------------- */
-            Aim = Helpers.GetPPBase(aimStars);
+            Aim = GetPPBase(aimStars);
             Aim *= lengthBonus;
             Aim *= missPenality;
             Aim *= comboBreak;
@@ -147,14 +150,13 @@ namespace OppaiSharp
                 Aim *= 1.45 * lengthBonus;
 
             double accBonus = 0.5 + accuracy / 2.0;
-            double odBonus =
-                0.98 + (mapstats.OD * mapstats.OD) / 2500.0;
+            double odBonus = 0.98 + (mapstats.OD * mapstats.OD) / 2500.0;
 
             Aim *= accBonus;
             Aim *= odBonus;
 
             /* speed pp -------------------------------------------- */
-            Speed = Helpers.GetPPBase(speedStars);
+            Speed = GetPPBase(speedStars);
             Speed *= lengthBonus;
             Speed *= missPenality;
             Speed *= comboBreak;
@@ -187,9 +189,9 @@ namespace OppaiSharp
         /// <inheritdoc />
         /// <summary> See <see cref="PPv2Parameters" /> </summary>
         public PPv2(PPv2Parameters p) : 
-            this(p.AimStars, p.SpeedStars, p.MaxCombo, p.Nsliders,
-            p.Ncircles, p.Nobjects, p.BaseAr, p.BaseOd, p.Mode,
-            p.Mods, p.Combo, p.N300, p.N100, p.N50, p.Nmiss,
+            this(p.AimStars, p.SpeedStars, p.MaxCombo, p.CountSliders,
+            p.CountCircles, p.CountObjects, p.BaseAR, p.BaseOD, p.Mode,
+            p.Mods, p.Combo, p.Count300, p.Count100, p.Count50, p.CountMiss,
             p.ScoreVersion, p.Beatmap)
         { }
 
@@ -197,9 +199,11 @@ namespace OppaiSharp
         /// <summary>
         /// Simplest possible call, calculates ppv2 for SS scorev1
         /// </summary>
-        public PPv2(double aimStars, double speedStars, Map map) 
+        public PPv2(double aimStars, double speedStars, Beatmap map) 
             : this(aimStars, speedStars, -1, map.CountSliders, map.CountCircles, map.Objects.Count, 
                   map.AR, map.OD, map.Mode, Mods.NoMod, -1, -1, 0, 0, 0, 1, map)
         { }
+
+        private static double GetPPBase(double stars) => Math.Pow(5.0 * Math.Max(1.0, stars / 0.0675) - 4.0, 3.0) / 100000.0;
     }
 }

@@ -2,12 +2,9 @@
 
 namespace OppaiSharp
 {
-    //TODO: struct?
-    public class Accuracy
+    public struct Accuracy
     {
         public int Count300, Count100, Count50, CountMiss;
-
-        public Accuracy() { }
 
         /// <param name="count300">
         /// The number of 300s, if -1 it will be calculated from the object count in <see cref="Accuracy.Value(int)"/>
@@ -34,8 +31,7 @@ namespace OppaiSharp
         /// Calls <see cref="Accuracy(int,int,int,int)" /> with -1 300's and 0 misses
         /// </summary>
         public Accuracy(int count100, int count50) : this(-1, count100, count50, 0) { }
-
-
+        
         /// <inheritdoc />
         /// <summary>
         /// Calls <see cref="Accuracy(int,int,int,int)" /> with -1 300's, 0 50's and 0 misses
@@ -53,7 +49,8 @@ namespace OppaiSharp
         /// <param name="countMiss"></param>
         public Accuracy(double accPercent, int countObjects, int countMiss)
         {
-            countMiss = Math.Min(countObjects, countMiss);
+            Count50 = 0;
+            CountMiss = Math.Min(countObjects, countMiss);
             int max300 = countObjects - countMiss;
 
             double maxAcc = new Accuracy(max300, 0, 0, countMiss).Value() * 100.0;

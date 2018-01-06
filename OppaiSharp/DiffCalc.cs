@@ -3,32 +3,32 @@ using System.Collections.Generic;
 
 namespace OppaiSharp
 {
-    internal partial class DiffCalc
+    public partial class DiffCalc
     {
         /// <summary>default Value for singletap_threshold <see cref="Calc()" /></summary>
-        public const double DefaultSingletapThreshold = 125.0;  //TODO: non-const?
+        public const double DefaultSingletapThreshold = 125.0;
 
         /// <summary>Star rating</summary>
-        public double Total;
+        public double Total { get; private set; }
 
         /// <summary>Aim stars</summary>
-        public double Aim;
+        public double Aim { get; private set; }
 
         /// <summary>Speed stars</summary>
-        public double Speed;
+        public double Speed { get; private set; }
 
         /// <summary>The number of notes that are considered singletaps by the difficulty calculator</summary>
-        public int CountSingles;
+        public int CountSingles { get; private set; }
 
         /// <summary>The number of taps slower or equal to the singletap threshold value</summary>
-        public int CountSinglesThreshold;
-        
+        public int CountSinglesThreshold { get; private set; }
+
         /// <summary>
         /// The beatmap we want to calculate the difficulty for. Must be set or passed to Calc() explicitly. Persists 
         /// across Calc() calls unless it's changed or explicity passed to Calc().
-        /// See: <see cref="Calc(Map)"/>, <see cref="Calc(Map, Mods)"/>, <see cref="Calc(Map, Mods, double)"/>
+        /// See: <see cref="Calc(OppaiSharp.Beatmap)"/>, <see cref="Calc(OppaiSharp.Beatmap, Mods)"/>, <see cref="Calc(OppaiSharp.Beatmap, Mods, double)"/>
         /// </summary>
-        public Map Beatmap;
+        public Beatmap Beatmap { get; set; }
 
         private double speedMul;
         private readonly List<double> strains = new List<double>(512);
@@ -44,57 +44,6 @@ namespace OppaiSharp
         }
 
         public override string ToString() => $"{Total} stars ({Aim} aim, {Speed} speed)";
-
-        private double CalcIndividual(StrainType type)
-        {
-            strains.Clear();
-
-            double strainStep = StrainStep * speedMul;
-            double intervalEnd = strainStep;
-            double maxStrain = 0.0;
-
-            //calculate all strains
-            for (int i = 0; i < Beatmap.Objects.Count; ++i) {
-                HitObject obj = Beatmap.Objects[i];
-                HitObject prev = i > 0 
-                    ? Beatmap.Objects[i - 1] 
-                    : null;
-
-                if (prev != null)
-                    DiffStrain(type, obj, prev, speedMul);
-
-                while (obj.Time > intervalEnd) {
-                    //add max strain for this interval
-                    strains.Add(maxStrain);
-
-                    if (prev != null) {
-                        //decay last object's strains until the next interval and use that as the initial max strain
-                        double decay = Math.Pow(DecayBase[type], (intervalEnd - prev.Time) / 1000.0);
-                        maxStrain = prev.Strains[type] * decay;
-                    }
-                    else
-                        maxStrain = 0.0;
-
-                    intervalEnd += strainStep;
-                }
-
-                maxStrain = Math.Max(maxStrain, obj.Strains[type]);
-            }
-
-            //weigh the top strains sorted from highest to lowest
-            double weight = 1.0;
-            double difficulty = 0.0;
-
-            strains.Sort();
-            strains.Reverse();
-
-            foreach (double strain in strains) {
-                difficulty += strain * weight;
-                weight *= DecayWeight;
-            }
-
-            return difficulty;
-        }
         
         /// <summary>
         /// Calculates beatmap difficulty and stores it in total, aim, speed, nsingles, nsingles_speed fields.
@@ -126,17 +75,17 @@ namespace OppaiSharp
             //calculate normalized positions
             foreach (HitObject obj in Beatmap.Objects)
             {
-                if ((obj.Type & HitObjects.Spinner) != 0) {
+                if ((obj.Type & HitObjectType.Spinner) != 0) {
                     obj.Normpos = new Vector2(normalizedCenter);
                 }
                 else {
                     Vector2 pos;
 
                     switch (obj.Type) {
-                        case HitObjects.Slider:
+                        case HitObjectType.Slider:
                             pos = ((Slider)obj.Data).Position;
                             break;
-                        case HitObjects.Circle:
+                        case HitObjectType.Circle:
                             pos = ((Circle)obj.Data).Position;
                             break;
                         default:
@@ -169,7 +118,7 @@ namespace OppaiSharp
                 if (curr.IsSingle)
                     CountSingles++;
 
-                if ((curr.Type & (HitObjects.Circle | HitObjects.Slider)) == 0)
+                if ((curr.Type & (HitObjectType.Circle | HitObjectType.Slider)) == 0)
                     continue;
 
                 double interval = (curr.Time - prev.Time) / speedMul;
@@ -195,7 +144,7 @@ namespace OppaiSharp
         /// <summary>
         /// Sets beatmap field and calls <see cref="Calc(Mods, double)"/>
         /// </summary>
-        public DiffCalc Calc(Map beatmap, Mods mods, double singletapThreshold)
+        public DiffCalc Calc(Beatmap beatmap, Mods mods, double singletapThreshold)
         {
             Beatmap = beatmap;
             return Calc(mods, singletapThreshold);
@@ -205,13 +154,68 @@ namespace OppaiSharp
         /// Sets beatmap field and calls <see cref="Calc(Mods, double)"/> with 
         /// <seealso cref="DefaultSingletapThreshold"/> as second parameter
         /// </summary>
-        public DiffCalc Calc(Map beatmap, Mods mods) => Calc(beatmap, mods, DefaultSingletapThreshold);
+        public DiffCalc Calc(Beatmap beatmap, Mods mods) => Calc(beatmap, mods, DefaultSingletapThreshold);
         
         /// <summary>
-        /// Sets beatmap field and calls <see cref="Calc(Map, Mods, double)"/> with 
+        /// Sets beatmap field and calls <see cref="Calc(OppaiSharp.Beatmap, Mods, double)"/> with 
         /// <seealso cref="Mods.NoMod"/> and <seealso cref="DefaultSingletapThreshold"/> as parameters
         /// </summary>
-        public DiffCalc Calc(Map beatmap) => Calc(beatmap, Mods.NoMod, DefaultSingletapThreshold);
+        public DiffCalc Calc(Beatmap beatmap) => Calc(beatmap, Mods.NoMod, DefaultSingletapThreshold);
+
+        private double CalcIndividual(StrainType type)
+        {
+            strains.Clear();
+
+            double strainStep = StrainStep * speedMul;
+            double intervalEnd = strainStep;
+            double maxStrain = 0.0;
+
+            //calculate all strains
+            for (int i = 0; i < Beatmap.Objects.Count; ++i)
+            {
+                HitObject obj = Beatmap.Objects[i];
+                HitObject prev = i > 0
+                    ? Beatmap.Objects[i - 1]
+                    : null;
+
+                if (prev != null)
+                    DiffStrain(type, obj, prev, speedMul);
+
+                while (obj.Time > intervalEnd)
+                {
+                    //add max strain for this interval
+                    strains.Add(maxStrain);
+
+                    if (prev != null)
+                    {
+                        //decay last object's strains until the next interval and use that as the initial max strain
+                        double decay = Math.Pow(DecayBase[type], (intervalEnd - prev.Time) / 1000.0);
+                        maxStrain = prev.Strains[type] * decay;
+                    }
+                    else
+                        maxStrain = 0.0;
+
+                    intervalEnd += strainStep;
+                }
+
+                maxStrain = Math.Max(maxStrain, obj.Strains[type]);
+            }
+
+            //weigh the top strains sorted from highest to lowest
+            double weight = 1.0;
+            double difficulty = 0.0;
+
+            strains.Sort();
+            strains.Reverse();
+
+            foreach (double strain in strains)
+            {
+                difficulty += strain * weight;
+                weight *= DecayWeight;
+            }
+
+            return difficulty;
+        }
 
         private static double DiffSpacingWeight(StrainType type, double distance)
         {
@@ -248,7 +252,7 @@ namespace OppaiSharp
                 Math.Pow(DecayBase[type], timeElapsed / 1000.0);
 
             /* this implementation doesn't account for sliders */
-            if ((obj.Type & (HitObjects.Slider | HitObjects.Circle)) != 0)
+            if ((obj.Type & (HitObjectType.Slider | HitObjectType.Circle)) != 0)
             {
                 double distance = (obj.Normpos - prev.Normpos).Length;
 

@@ -2,18 +2,17 @@
 
 namespace OppaiSharp
 {
-    //TODO: struct?
-    internal class MapStats
+    internal struct MapStats
     {
-        public const double OD0Ms = 79.5;
-        public const double OD10Ms = 19.5;
-        public const double AR0Ms = 1800.0;
-        public const double AR5Ms = 1200.0;
-        public const double AR10Ms = 450.0;
+        private const double OD0Ms = 79.5;
+        private const double OD10Ms = 19.5;
+        private const double AR0Ms = 1800.0;
+        private const double AR5Ms = 1200.0;
+        private const double AR10Ms = 450.0;
 
-        public const double ODMsStep = (OD0Ms - OD10Ms) / 10.0;
-        public const double ARMsStep1 = (AR0Ms - AR5Ms) / 5.0;
-        public const double ARMsStep2 = (AR5Ms - AR10Ms) / 5.0;
+        private const double ODMsStep = (OD0Ms - OD10Ms) / 10.0;
+        private const double ARMsStep1 = (AR0Ms - AR5Ms) / 5.0;
+        private const double ARMsStep2 = (AR5Ms - AR10Ms) / 5.0;
 
         public float AR, OD, CS, HP;
 

@@ -4,43 +4,43 @@ using System.IO;
 
 namespace OppaiSharp
 {
-    internal class Parser
+    public class Parser
     {
-        /// <summary> Last line touched. </summary>
-        public string Lastline;
-
-        /// <summary> Last line number touched. </summary>
-        public int Nline;
-
-        /// <summary> Last token touched. </summary>
-        public string Lastpos;
-
-        /// <summary> True if the parsing completed successfully. </summary>
-        public bool Done;
-
         /// <summary>
         /// The parsed beatmap will be stored in this object.
         /// Will persist throughout Reset() calls and will be reused by
         /// subsequent parse calls until changed.
         /// See <seealso cref="Reset"/>
         /// </summary>
-        public Map Beatmap;
+        public Beatmap Beatmap { get; private set; }
+
+        /// <summary> True if the parsing completed successfully. </summary>
+        public bool Done { get; private set; }
+
+        /// <summary> Last line touched. </summary>
+        private string lastLine;
+
+        /// <summary> Last line number touched. </summary>
+        private int lastLineNumber;
+
+        /// <summary> Last token touched. </summary>
+        private string lastPos;
 
         /// <summary> Current section </summary>
         private string section;
         private bool arFound = false;
 
-        public Parser() { Reset(); }
+        public Parser() => Reset();
 
         private void Reset()
         {
-            Lastline = Lastpos = section = "";
-            Nline = 0;
+            lastLine = lastPos = section = "";
+            lastLineNumber = 0;
             Done = false;
             Beatmap?.Reset();
         }
 
-        public override string ToString() => $"in line {Nline}\n{Lastline}\n> {Lastpos}";
+        public override string ToString() => $"in line {lastLineNumber}\n{lastLine}\n> {lastPos}";
 
         private void Warn(string fmt, params object[] args)
         {
@@ -53,11 +53,11 @@ namespace OppaiSharp
         /// Trims <paramref name="v"/>, sets lastpos to it and returns trimmed <paramref name="v"/>.
         /// Should be used to access any string that can make the parser fail.
         /// </summary>
-        private string Setlastpos(string v) => Lastpos = v.Trim();
+        private string Setlastpos(string v) => lastPos = v.Trim();
 
         private string[] Property()
         {
-            string[] split = Lastline.Split(new[] {':'}, 2);
+            string[] split = lastLine.Split(new[] {':'}, 2);
             split[0] = Setlastpos(split[0]);
             if (split.Length > 1)
                 split[1] = Setlastpos(split[1]);
@@ -133,7 +133,7 @@ namespace OppaiSharp
 
         private void Timing()
         {
-            string[] s = Lastline.Split(',');
+            string[] s = lastLine.Split(',');
 
             if (s.Length > 8)
                 Warn("timing point with trailing values");
@@ -151,18 +151,18 @@ namespace OppaiSharp
 
         private void Objects()
         {
-            string[] s = Lastline.Split(',');
+            string[] s = lastLine.Split(',');
 
             if (s.Length > 11)
                 Warn("object with trailing values");
 
             var obj = new HitObject {
                 Time = double.Parse(Setlastpos(s[2])),
-                Type = (HitObjects)int.Parse(Setlastpos(s[3]))
+                Type = (HitObjectType)int.Parse(Setlastpos(s[3]))
             };
 
             switch (obj.Type) {
-                case HitObjects.Circle:
+                case HitObjectType.Circle:
                     ++Beatmap.CountCircles;
                     obj.Data = new Circle {
                         Position = new Vector2 {
@@ -171,10 +171,10 @@ namespace OppaiSharp
                         }
                     };
                     break;
-                case HitObjects.Spinner:
+                case HitObjectType.Spinner:
                     Beatmap.CountSpinners++;
                     break;
-                case HitObjects.Slider:
+                case HitObjectType.Slider:
                     Beatmap.CountSliders++;
                     obj.Data = new Slider {
                         Position = {
@@ -192,28 +192,28 @@ namespace OppaiSharp
 
         /// <summary>
         /// Calls Reset() on beatmap and parses a osu file into it.
-        /// If beatmap is null, it will be initialized to a new Map
+        /// If beatmap is null, it will be initialized to a new Beatmap
         /// </summary>
         /// <returns><see cref="Beatmap"/></returns>
-        public Map Map(StreamReader reader)
+        public Beatmap Map(StreamReader reader)
         {
             string line;
 
             if (Beatmap == null)
-                Beatmap = new Map();
+                Beatmap = new Beatmap();
 
             Reset();
 
             while ((line = reader.ReadLine()) != null) {
-                Lastline = line;
-                ++Nline;
+                lastLine = line;
+                ++lastLineNumber;
 
                 //comments (according to lazer)
                 if (line.StartsWith(" ") || line.StartsWith("_")) {
                     continue;
                 }
 
-                line = Lastline = line.Trim();
+                line = lastLine = line.Trim();
                 if (line.Length <= 0) {
                     continue;
                 }
@@ -267,7 +267,7 @@ namespace OppaiSharp
 
         /// <summary> sets beatmap and returns map(reader) </summary>
         /// <returns><see cref="Beatmap"/></returns>
-        public Map Map(StreamReader reader, Map beatmap) {
+        public Beatmap Map(StreamReader reader, Beatmap beatmap) {
             Beatmap = beatmap;
             return Map(reader);
         }

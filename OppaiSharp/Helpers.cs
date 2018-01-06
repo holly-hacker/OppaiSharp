@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 
 namespace OppaiSharp
 {
@@ -68,12 +67,6 @@ namespace OppaiSharp
             }
 
             return mask;
-        }
-
-        //TODO: move this and below to diffcalc
-        internal static double GetPPBase(double stars)
-        {
-            return Math.Pow(5.0 * Math.Max(1.0, stars / 0.0675) - 4.0, 3.0) / 100000.0;
         }
     }
 }

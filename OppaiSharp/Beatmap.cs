@@ -4,28 +4,35 @@ using System.Text;
 
 namespace OppaiSharp
 {
-    public class Map
+    public class Beatmap
     {
-        public int FormatVersion;
-        public GameMode Mode;
-        public string Title, TitleUnicode;
-        public string Artist, ArtistUnicode;
+        public int FormatVersion { get; internal set; }
+        public GameMode Mode { get; internal set; }
+        public string Title { get; internal set; }
+        public string TitleUnicode  { get; internal set; }
+        public string Artist { get; internal set; }
+        public string ArtistUnicode { get; internal set; }
 
         /// <summary>Mapper name</summary>
-        public string Creator;
+        public string Creator { get; internal set; }
 
         /// <summary>Difficulty name</summary>
-        public string Version;
+        public string Version { get; internal set; }
 
-        public int CountCircles, CountSliders, CountSpinners;
-        public float HP, CS, OD, AR;
-        public float SliderVelocity, TickRate;
+        public int CountCircles { get; set; }
+        public int CountSliders { get; set; }
+        public int CountSpinners { get; set; }
+        public float HP { get; set; }
+        public float CS { get; set; }
+        public float OD { get; set; }
+        public float AR { get; set; }
+        public float SliderVelocity { get; set; }
+        public float TickRate { get; set; }
 
-        public List<HitObject> Objects = new List<HitObject>(512);
+        public List<HitObject> Objects { get; } = new List<HitObject>(512);
+        public List<Timing> TimingPoints { get; } = new List<Timing>(32);
 
-        public List<Timing> TimingPoints = new List<Timing>(32);
-
-        public Map() { Reset(); }
+        public Beatmap() => Reset();
 
         /// <summary>Clears the instance so that it can be reused</summary>
         public void Reset()
@@ -76,7 +83,7 @@ namespace OppaiSharp
 
             foreach (HitObject obj in Objects)
             {
-                if ((obj.Type & HitObjects.Slider) == 0) {
+                if ((obj.Type & HitObjectType.Slider) == 0) {
                     //non-sliders add 1 combo
                     res++;
                     continue;

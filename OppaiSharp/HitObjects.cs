@@ -6,23 +6,23 @@ namespace OppaiSharp
     public class HitObject
     {
         /// <summary> Start time in milliseconds. </summary>
-        public double Time = 0.0;
-        public HitObjects Type = HitObjects.Circle;
+        public double Time { get; set; } = 0.0;
+        public HitObjectType Type { get; set; } = HitObjectType.Circle;
 
         /// <summary> An instance of Circle or Slider or null. </summary>
-        public object Data = null;
-        public Vector2 Normpos = new Vector2();
-        public Dictionary<StrainType, double> Strains = new Dictionary<StrainType, double> { { StrainType.Speed, 0.0 }, { StrainType.Aim, 0.0 } };
-        public bool IsSingle = false;
+        public object Data { get; set; } = null;
+        public Vector2 Normpos { get; set; } = new Vector2();
+        public Dictionary<StrainType, double> Strains { get; } = new Dictionary<StrainType, double> { { StrainType.Speed, 0.0 }, { StrainType.Aim, 0.0 } };
+        public bool IsSingle { get; internal set; } = false;
 
         /// <summary> String representation of the type bitmask. </summary>
         public string TypeString()
         {
             var res = new StringBuilder();
 
-            if ((Type & HitObjects.Circle) != 0) res.Append("circle | ");
-            if ((Type & HitObjects.Slider) != 0) res.Append("slider | ");
-            if ((Type & HitObjects.Spinner) != 0) res.Append("spinner | ");
+            if ((Type & HitObjectType.Circle) != 0) res.Append("circle | ");
+            if ((Type & HitObjectType.Slider) != 0) res.Append("slider | ");
+            if ((Type & HitObjectType.Spinner) != 0) res.Append("spinner | ");
 
             string result = res.ToString();
             return result.Substring(0, result.Length - 3);
@@ -45,15 +45,14 @@ namespace OppaiSharp
         public bool Change = false;
     }
 
-    //TODO: structs?
-    internal class Circle
+    public struct Circle
     {
         public Vector2 Position;
 
         public override string ToString() => Position.ToString();
     }
 
-    internal class Slider
+    public struct Slider
     {
         public Vector2 Position;
         public double Distance;

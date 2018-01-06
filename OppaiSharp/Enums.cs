@@ -21,7 +21,7 @@ namespace OppaiSharp
     }
 
     [Flags]
-    public enum HitObjects
+    public enum HitObjectType
     {
         Circle = 1 << 0,
         Slider = 1 << 1,
