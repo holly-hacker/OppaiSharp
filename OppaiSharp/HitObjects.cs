@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Text;
 
 namespace OppaiSharp
@@ -12,13 +12,13 @@ namespace OppaiSharp
         /// <summary> An instance of Circle or Slider or null. </summary>
         public object Data = null;
         public Vector2 Normpos = new Vector2();
-        public double[] Strains = { 0.0, 0.0 };
+        public Dictionary<StrainType, double> Strains = new Dictionary<StrainType, double> { { StrainType.Speed, 0.0 }, { StrainType.Aim, 0.0 } };
         public bool IsSingle = false;
 
         /// <summary> String representation of the type bitmask. </summary>
-        public string Typestr()
+        public string TypeString()
         {
-            StringBuilder res = new StringBuilder();
+            var res = new StringBuilder();
 
             if ((Type & HitObjects.Circle) != 0) res.Append("circle | ");
             if ((Type & HitObjects.Slider) != 0) res.Append("slider | ");
@@ -30,8 +30,8 @@ namespace OppaiSharp
 
         public override string ToString()
         {
-            return $"{{ time={Time}, type={Typestr()}, data={Data}, normpos={Normpos}, " 
-                 + $"strains=[ {Strains[0]}, {Strains[1]} ], is_single={IsSingle} }}";
+            return $"{{ time={Time}, type={TypeString()}, data={Data}, normpos={Normpos}, " 
+                 + $"strains=[ {Strains[StrainType.Speed]}, {Strains[StrainType.Aim]} ], is_single={IsSingle} }}";
         }
     }
 
@@ -41,7 +41,7 @@ namespace OppaiSharp
         public double Time = 0.0;
         public double MsPerBeat = -100.0;
 
-        /// <summary> If false, ms_per_beat is -100 * bpm_multiplier. </summary>
+        /// <summary> If false, <seealso cref="MsPerBeat"/> is -100 * BpmMultiplier. </summary>
         public bool Change = false;
     }
 

@@ -7,39 +7,37 @@ namespace OppaiSharp
     public class Map
     {
         public int FormatVersion;
-        public int Mode;
+        public GameMode Mode;
         public string Title, TitleUnicode;
         public string Artist, ArtistUnicode;
 
-        /// <summary> mapper name </summary>
+        /// <summary>Mapper name</summary>
         public string Creator;
 
-        /// <summary> difficulty name </summary>
+        /// <summary>Difficulty name</summary>
         public string Version;
 
-        public int Ncircles, Nsliders, Nspinners;
-        public float Hp, Cs, Od, Ar;
-        public float Sv, TickRate;
+        public int CountCircles, CountSliders, CountSpinners;
+        public float HP, CS, OD, AR;
+        public float SliderVelocity, TickRate;
 
         public List<HitObject> Objects = new List<HitObject>(512);
 
-        public List<Timing> Tpoints = new List<Timing>(32);
+        public List<Timing> TimingPoints = new List<Timing>(32);
 
         public Map() { Reset(); }
 
-        /// <summary> clears the instance so that it can be reused </summary>
+        /// <summary>Clears the instance so that it can be reused</summary>
         public void Reset()
         {
-            Title = TitleUnicode =
-            Artist = ArtistUnicode =
-            Creator = Version = "";
+            Title = TitleUnicode = Artist = ArtistUnicode = Creator = Version = "";
 
-            Ncircles = Nsliders = Nspinners = 0;
-            Hp = Cs = Od = Ar = 5.0f;
-            Sv = TickRate = 1.0f;
+            CountCircles = CountSliders = CountSpinners = 0;
+            HP = CS = OD = AR = 5.0f;
+            SliderVelocity = TickRate = 1.0f;
 
             Objects.Clear();
-            Tpoints.Clear();
+            TimingPoints.Clear();
         }
 
         public override string ToString()
@@ -51,57 +49,56 @@ namespace OppaiSharp
                 sb.Append(", ");
             }
 
-            string objsStr = sb.ToString();
+            string objects = sb.ToString();
 
-            sb.Length = 0;
+            sb.Clear();
 
-            foreach (Timing t in Tpoints) {
+            foreach (Timing t in TimingPoints) {
                 sb.Append(t);
                 sb.Append(", ");
             }
 
-            string timingStr = sb.ToString();
+            string timingPoints = sb.ToString();
 
             return $"beatmap {{ mode={Mode}, title={Title}, title_unicode={TitleUnicode}, " 
                     + $"artist={Artist}, artist_unicode={ArtistUnicode}, creator={Creator}, " 
-                    + $"version={Version}, ncircles={Ncircles}, nsliders={Nsliders}, nspinners={Nspinners}," 
-                    + $" hp={Hp}, cs={Cs}, od={Od}, ar={Ar}, sv={Sv}, tick_rate={TickRate}, " 
-                    + $"tpoints=[ {timingStr} ], objects=[ {objsStr} ] }}";
+                    + $"version={Version}, ncircles={CountCircles}, nsliders={CountSliders}, nspinners={CountSpinners}," 
+                    + $" hp={HP}, cs={CS}, od={OD}, ar={AR}, sv={SliderVelocity}, tick_rate={TickRate}, " 
+                    + $"tpoints=[ {timingPoints} ], objects=[ {objects} ] }}";
         }
 
         public int MaxCombo()
         {
             int res = 0;
-            int tindex = -1;
-            double tnext = double.NegativeInfinity;
+            int tIndex = -1;
+            double tNext = double.NegativeInfinity;
             double pxPerBeat = 0.0;
 
             foreach (HitObject obj in Objects)
             {
-                if ((obj.Type & HitObjects.Slider) == 0)
-                {
+                if ((obj.Type & HitObjects.Slider) == 0) {
                     //non-sliders add 1 combo
-                    ++res;
+                    res++;
                     continue;
                 }
 
                 //keep track of the current timing point without
                 //looping through all of them for every object
-                while (obj.Time >= tnext) {
-                    ++tindex;
+                while (obj.Time >= tNext) {
+                    tIndex++;
 
-                    tnext = Tpoints.Count > tindex + 1 
-                        ? Tpoints[tindex + 1].Time 
+                    tNext = TimingPoints.Count > tIndex + 1 
+                        ? TimingPoints[tIndex + 1].Time 
                         : double.PositiveInfinity;
 
-                    Timing t = Tpoints[tindex];
+                    Timing t = TimingPoints[tIndex];
 
                     double svMultiplier = 1.0;
 
                     if (!t.Change && t.MsPerBeat < 0)
                         svMultiplier = -100.0 / t.MsPerBeat;
 
-                    pxPerBeat = Sv * 100.0 * svMultiplier;
+                    pxPerBeat = SliderVelocity * 100.0 * svMultiplier;
                     if (FormatVersion < 8)
                         pxPerBeat /= svMultiplier;
                 }
@@ -113,7 +110,7 @@ namespace OppaiSharp
 
                 int ticks = (int)Math.Ceiling((numBeats - 0.1) / sl.Repetitions * TickRate);
 
-                --ticks;
+                ticks--;
                 ticks *= sl.Repetitions;
                 ticks += sl.Repetitions + 1;
 

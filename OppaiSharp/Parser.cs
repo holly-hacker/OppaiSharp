@@ -6,27 +6,27 @@ namespace OppaiSharp
 {
     internal class Parser
     {
-        /// <summary> last line touched. </summary>
+        /// <summary> Last line touched. </summary>
         public string Lastline;
 
-        /// <summary> last line number touched. </summary>
+        /// <summary> Last line number touched. </summary>
         public int Nline;
 
-        /// <summary> last token touched. </summary>
+        /// <summary> Last token touched. </summary>
         public string Lastpos;
 
-        /// <summary> true if the parsing completed successfully. </summary>
+        /// <summary> True if the parsing completed successfully. </summary>
         public bool Done;
 
         /// <summary>
-        /// the parsed beatmap will be stored in this object.
-        /// willl persist throughout Reset() calls and will be reused by
+        /// The parsed beatmap will be stored in this object.
+        /// Will persist throughout Reset() calls and will be reused by
         /// subsequent parse calls until changed.
-        /// See <seealso cref="Parser.Reset"/>
+        /// See <seealso cref="Reset"/>
         /// </summary>
         public Map Beatmap;
 
-        /// <summary> current section </summary>
+        /// <summary> Current section </summary>
         private string section;
         private bool arFound = false;
 
@@ -44,12 +44,13 @@ namespace OppaiSharp
 
         private void Warn(string fmt, params object[] args)
         {
+            //TODO: to logger
             Debug.WriteLine("W: " + fmt, args);
             Debug.WriteLine(this);
         }
 
         /// <summary>
-        /// Trims v, sets lastpos to it and returns trimmed v.
+        /// Trims <paramref name="v"/>, sets lastpos to it and returns trimmed <paramref name="v"/>.
         /// Should be used to access any string that can make the parser fail.
         /// </summary>
         private string Setlastpos(string v) => Lastpos = v.Trim();
@@ -95,9 +96,9 @@ namespace OppaiSharp
 
             switch (p[0]) {
                 case "Mode":
-                    Beatmap.Mode = int.Parse(Setlastpos(p[1]));
+                    Beatmap.Mode = (GameMode)int.Parse(Setlastpos(p[1]));
 
-                    if (Beatmap.Mode != Constants.ModeStd)
+                    if (Beatmap.Mode != GameMode.Standard)
                         throw new InvalidOperationException("this gamemode is not yet supported");
                     break;
             }
@@ -109,20 +110,20 @@ namespace OppaiSharp
 
             switch (p[0]) {
                 case "CircleSize":
-                    Beatmap.Cs = float.Parse(Setlastpos(p[1]));
+                    Beatmap.CS = float.Parse(Setlastpos(p[1]));
                     break;
                 case "OverallDifficulty":
-                    Beatmap.Od = float.Parse(Setlastpos(p[1]));
+                    Beatmap.OD = float.Parse(Setlastpos(p[1]));
                     break;
                 case "ApproachRate":
-                    Beatmap.Ar = float.Parse(Setlastpos(p[1]));
+                    Beatmap.AR = float.Parse(Setlastpos(p[1]));
                     arFound = true;
                     break;
                 case "HPDrainRate":
-                    Beatmap.Hp = float.Parse(Setlastpos(p[1]));
+                    Beatmap.HP = float.Parse(Setlastpos(p[1]));
                     break;
                 case "SliderMultiplier":
-                    Beatmap.Sv = float.Parse(Setlastpos(p[1]));
+                    Beatmap.SliderVelocity = float.Parse(Setlastpos(p[1]));
                     break;
                 case "SliderTickRate":
                     Beatmap.TickRate = float.Parse(Setlastpos(p[1]));
@@ -145,7 +146,7 @@ namespace OppaiSharp
             if (s.Length >= 7)
                 t.Change = s[6].Trim() != "0";
 
-            Beatmap.Tpoints.Add(t);
+            Beatmap.TimingPoints.Add(t);
         }
 
         private void Objects()
@@ -162,7 +163,7 @@ namespace OppaiSharp
 
             switch (obj.Type) {
                 case HitObjects.Circle:
-                    ++Beatmap.Ncircles;
+                    ++Beatmap.CountCircles;
                     obj.Data = new Circle {
                         Position = new Vector2 {
                             X = double.Parse(Setlastpos(s[0])),
@@ -171,10 +172,10 @@ namespace OppaiSharp
                     };
                     break;
                 case HitObjects.Spinner:
-                    Beatmap.Nspinners++;
+                    Beatmap.CountSpinners++;
                     break;
                 case HitObjects.Slider:
-                    Beatmap.Nsliders++;
+                    Beatmap.CountSliders++;
                     obj.Data = new Slider {
                         Position = {
                             X = double.Parse(Setlastpos(s[0])),
@@ -190,8 +191,8 @@ namespace OppaiSharp
         }
 
         /// <summary>
-        /// calls Reset() on beatmap and parses a osu file into it.
-        /// if beatmap is null, it will be initialized to a new Map
+        /// Calls Reset() on beatmap and parses a osu file into it.
+        /// If beatmap is null, it will be initialized to a new Map
         /// </summary>
         /// <returns><see cref="Beatmap"/></returns>
         public Map Map(StreamReader reader)
@@ -257,7 +258,7 @@ namespace OppaiSharp
             }
 
             if (!arFound) {
-                Beatmap.Ar = Beatmap.Od;
+                Beatmap.AR = Beatmap.OD;
             }
 
             Done = true;

@@ -42,14 +42,14 @@
   <ItemGroup>
     <Compile Include="AccCalc.cs" />
     <Compile Include="Beatmap.cs" />
-    <Compile Include="Constants.cs" />
     <Compile Include="DiffCalc.cs" />
+    <Compile Include="DiffCalc_Constants.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="HitObjects.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="PPCalc.cs" />
-    <Compile Include="Unsorted.cs" />
+    <Compile Include="MapStats.cs" />
     <Compile Include="Vector2.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

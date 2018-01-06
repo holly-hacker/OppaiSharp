@@ -28,12 +28,26 @@ namespace OppaiSharp
         Spinner = 1 << 3,
     }
 
-    [Flags]
-    public enum ModApplyFlags
+    public enum GameMode
     {
-        ApplyAr = 1 << 0,
-        ApplyOd = 1 << 1,
-        ApplyCs = 1 << 2,
-        ApplyHp = 1 << 3
+        Standard = 0,
+        Taiko = 1,
+        CatchTheBeat = 2,
+        Mania = 3
+    }
+
+    public enum StrainType
+    {
+        Speed = 0,
+        Aim = 1,
+    }
+
+    [Flags]
+    internal enum ModApplyFlags
+    {
+        ApplyAR = 1 << 0,
+        ApplyOD = 1 << 1,
+        ApplyCS = 1 << 2,
+        ApplyHP = 1 << 3
     }
 }
