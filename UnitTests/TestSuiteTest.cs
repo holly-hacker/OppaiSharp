@@ -23,7 +23,7 @@ namespace UnitTests
         private const string SuiteUrl = "http://www.hnng.moe/stuff/" + SuitePath;
         private const string SuiteExpectedPath = "TestSuite.txt";
 
-        private readonly Dictionary<uint, ExpectedOutcome> testCases = new Dictionary<uint, ExpectedOutcome>();
+        private readonly List<Tuple<uint, ExpectedOutcome>> testCases = new List<Tuple<uint, ExpectedOutcome>>();
 
         [TestInitialize]
         public void Prepare()
@@ -45,7 +45,7 @@ namespace UnitTests
                     if (string.IsNullOrEmpty(line)) continue;
 
                     var c = new ExpectedOutcome(line, out uint id);
-                    testCases[id] = c;
+                    testCases.Add(new Tuple<uint, ExpectedOutcome>(id, c));
                 }
             }
         }
@@ -69,12 +69,15 @@ namespace UnitTests
                         ms.Seek(0, SeekOrigin.Begin);
 
                         bm = new Parser().Map(str);
+
+                        foreach (var testcase in testCases.Where(a => a.Item1 == id).Select(a => a.Item2))
+                        {
+                            var expected = testcase.PP;
+                            var actual = CheckCase(bm, testcase, out double margin);
+                            Console.WriteLine($"Testing {expected:F2}pp vs {actual:F2}pp");
+                            Assert.AreEqual(expected, actual, margin);
+                        }
                     }
-                    var testcase = testCases[id];
-                    var expected = testcase.PP;
-                    var actual = CheckCase(bm, testcase, out double margin);
-                    Console.WriteLine($"Testing {expected:F2}pp vs {actual:F2}pp");
-                    Assert.AreEqual(expected, actual, margin);
                 }
             }
         }
