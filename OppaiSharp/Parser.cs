@@ -45,7 +45,7 @@ namespace OppaiSharp
         private void Warn(string fmt, params object[] args)
         {
             //TODO: to logger
-            Debug.WriteLine("W: " + fmt, args);
+            Debug.WriteLine(string.Format("W: " + fmt, args));
             Debug.WriteLine(this);
         }
 

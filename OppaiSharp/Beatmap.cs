@@ -58,7 +58,11 @@ namespace OppaiSharp
 
             string objects = sb.ToString();
 
+#if NET20
+            sb = new StringBuilder();
+#else
             sb.Clear();
+#endif
 
             foreach (Timing t in TimingPoints) {
                 sb.Append(t);
