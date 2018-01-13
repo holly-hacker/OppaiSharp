@@ -2,6 +2,17 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard1.0;net20</TargetFrameworks>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>HoLLy</Authors>
+    <Company>HoLLy</Company>
+    <PackageId>HoLLy.osu.OppaiSharp</PackageId>
+    <Description>An osu! PP library. Port of oppai-ng.</Description>
+    <PackageProjectUrl>https://github.com/HoLLy-HaCKeR/OppaiSharp/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/HoLLy-HaCKeR/OppaiSharp/</RepositoryUrl>
+    <PackageLicenseUrl>https://github.com/HoLLy-HaCKeR/OppaiSharp/blob/master/LICENSE</PackageLicenseUrl>
+    <RepositoryType>Git</RepositoryType>
+    <PackageTags>osu! osu pp</PackageTags>
+    <PackageReleaseNotes>Initial release</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
