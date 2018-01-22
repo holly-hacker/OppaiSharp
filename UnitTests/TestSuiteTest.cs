@@ -5,14 +5,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OppaiSharp;
 using SharpCompress.Common.Tar;
 using SharpCompress.Readers;
+using Xunit;
+using Xunit.Abstractions;
 
 namespace UnitTests
 {
-    [TestClass]
     public class TestSuiteTest
     {
         private const string SuitePath = "test_suite_20170811.tar.xz";
@@ -20,17 +20,18 @@ namespace UnitTests
         private const string SuiteExpectedPath = "TestSuite.txt";
 
         private readonly List<Tuple<uint, ExpectedOutcome>> testCases = new List<Tuple<uint, ExpectedOutcome>>();
+        private readonly ITestOutputHelper output;
 
-        [TestInitialize]
-        public void Prepare()
+        public TestSuiteTest(ITestOutputHelper output)
         {
+            this.output = output;
+
             //make sure that the results are downloaded
             if (!File.Exists(SuitePath))
                 new WebClient().DownloadFile(SuiteUrl, SuitePath);
 
             //require the suite results to be here
-            if (!File.Exists(SuiteExpectedPath))
-                Assert.Inconclusive(SuiteExpectedPath + " not found!");
+            Skip.IfNot(File.Exists(SuiteExpectedPath), SuiteExpectedPath + " not found!");
 
             //load expected results from file
             testCases.Clear();
@@ -46,7 +47,7 @@ namespace UnitTests
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestEntireSuite()
         {
             using (var stream = new FileStream(SuitePath, FileMode.Open))
@@ -68,7 +69,7 @@ namespace UnitTests
                         sw.Restart();
                         bm = new Parser().Map(str);
                         sw.Stop();
-                        Console.WriteLine($"'{bm.Artist} - {bm.Title} [{bm.Version}] (mapped by {bm.Creator})' (Parse: {sw.Elapsed})");
+                        output.WriteLine($"'{bm.Artist} - {bm.Title} [{bm.Version}] (mapped by {bm.Creator})' (Parse: {sw.Elapsed})");
 
                         foreach (var testcase in testCases.Where(a => a.Item1 == id).Select(a => a.Item2))
                         {
@@ -78,15 +79,15 @@ namespace UnitTests
                             var actual = CheckCase(bm, testcase, out double margin);
                             sw.Stop();
 
-                            Console.WriteLine($"{expected:F2}pp vs {actual:F2}pp, \t{Math.Abs(actual - expected):F2}pp difference (Calc {sw.Elapsed})");
-                            Assert.AreEqual(expected, actual, margin);
+                            output.WriteLine($"{expected:F2}pp vs {actual:F2}pp, \t{Math.Abs(actual - expected):F2}pp difference (Calc {sw.Elapsed}, margin {margin})");
+                            Assert.InRange(actual, expected - margin, expected + margin);   //TODO: margin /= 2
                         }
                     }
                 }
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestSinglePlay()
         {
             byte[] data = new WebClient().DownloadData("https://osu.ppy.sh/osu/774965");
@@ -99,7 +100,7 @@ namespace UnitTests
             //calculate star ratings for HDDT
             Mods mods = Mods.Hidden | Mods.DoubleTime;
             var stars = new DiffCalc().Calc(beatmap, mods);
-            Console.WriteLine($"Star rating: {stars.Total:F2} (aim stars: {stars.Aim:F2}, speed stars: {stars.Speed:F2})");
+            output.WriteLine($"Star rating: {stars.Total:F2} (aim stars: {stars.Aim:F2}, speed stars: {stars.Speed:F2})");
 
             //calculate the PP for this map
             var pp = new PPv2(new PPv2Parameters {
@@ -111,10 +112,10 @@ namespace UnitTests
                 Count50 = 0,
                 CountMiss = 0,
             });
-            Console.WriteLine($"Play is worth {pp.Total:F2}pp ({pp.Aim:F2} aim pp, {pp.Acc:F2} acc pp, {pp.Speed:F2} " +
+            output.WriteLine($"Play is worth {pp.Total:F2}pp ({pp.Aim:F2} aim pp, {pp.Acc:F2} acc pp, {pp.Speed:F2} " +
                               $"speed pp) and has an accuracy of {pp.ComputedAccuracy.Value() * 100:F2}");
 
-            Assert.AreEqual(817.0, pp.Total, 0.5);
+            Assert.InRange(817.0, pp.Total - 1, pp.Total + 1);
         }
 
         private static double CheckCase(Beatmap bm, ExpectedOutcome outcome, out double margin)
@@ -149,7 +150,7 @@ namespace UnitTests
                 line = line.Trim(' ', ',', '{', '}');
                 string[] s = line.Split(',');
 
-                if (s.Length != 8) Assert.Inconclusive("Invalid test case");
+                Skip.IfNot(s.Length == 8, "Invalid test case");
                 
                 id = uint.Parse(s[0]);
                 maxCombo = ushort.Parse(s[1]);
@@ -162,7 +163,6 @@ namespace UnitTests
 
                 string modString = s[6].Trim(' ').Replace(" | ", string.Empty).ToUpper();
                 Mods = Helpers.StringToMods(modString);
-                    
             }
 
             public PPv2Parameters ToParameters(Beatmap bm, DiffCalc d)
