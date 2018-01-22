@@ -75,7 +75,7 @@ namespace OppaiSharp
         /// <see cref="CountMiss"/>). If -1, Count300 must have been set and will be used to deduce this value
         /// </param>
         /// <returns>The accuracy value(0.0-1.0)</returns>
-        public double Value(int countObjects)
+        public double Value(int countObjects = -1)
         {
             if (countObjects < 0 && Count300 < 0)
                 throw new ArgumentException($"Either {nameof(countObjects)} or {nameof(Count300)} must be specified");
@@ -91,8 +91,5 @@ namespace OppaiSharp
 
             return Math.Max(0, Math.Min(res, 1.0));
         }
-
-        /// <summary> Calls <see cref="Value(int)"/> with -1 as parameter </summary>
-        public double Value() => Value(-1);
     }
 }

@@ -94,6 +94,7 @@ namespace UnitTests
 
             var stream = new MemoryStream(data, false);
             var reader = new StreamReader(stream);
+
             //read a beatmap
             var beatmap = Beatmap.Read(reader);
 
@@ -103,17 +104,10 @@ namespace UnitTests
             output.WriteLine($"Star rating: {stars.Total:F2} (aim stars: {stars.Aim:F2}, speed stars: {stars.Speed:F2})");
 
             //calculate the PP for this map
-            var pp = new PPv2(new PPv2Parameters {
-                Beatmap = beatmap,
-                AimStars = stars.Aim,
-                SpeedStars = stars.Speed,
-                Mods = mods,
-                Count100 = 8,
-                Count50 = 0,
-                CountMiss = 0,
-            });
+            //the play has no misses or 50's, so we don't specify it
+            var pp = new PPv2(new PPv2Parameters(beatmap, stars, c100: 8, mods: mods));
             output.WriteLine($"Play is worth {pp.Total:F2}pp ({pp.Aim:F2} aim pp, {pp.Acc:F2} acc pp, {pp.Speed:F2} " +
-                              $"speed pp) and has an accuracy of {pp.ComputedAccuracy.Value() * 100:F2}");
+                              $"speed pp) and has an accuracy of {pp.ComputedAccuracy.Value() * 100:F2}%");
 
             Assert.InRange(817.0, pp.Total - 1, pp.Total + 1);
         }
@@ -124,8 +118,7 @@ namespace UnitTests
 
             margin = errorMargin * outcome.PP;
 
-            var diff = new DiffCalc().Calc(bm, outcome.Mods);
-            var pp = new PPv2(outcome.ToParameters(bm, diff));
+            var pp = new PPv2(outcome.ToParameters(bm));
 
             if (outcome.PP < 100)
                 margin *= 3;
@@ -140,10 +133,10 @@ namespace UnitTests
         private struct ExpectedOutcome
         {
             public readonly double PP;
-            public readonly Mods Mods;
 
-            private readonly ushort maxCombo;
+            private readonly ushort combo;
             private readonly ushort count300, count100, count50, countMiss;
+            private readonly Mods mods;
 
             public ExpectedOutcome(string line, out uint id)
             {
@@ -153,7 +146,7 @@ namespace UnitTests
                 Skip.IfNot(s.Length == 8, "Invalid test case");
                 
                 id = uint.Parse(s[0]);
-                maxCombo = ushort.Parse(s[1]);
+                combo =    ushort.Parse(s[1]);
                 count300 = ushort.Parse(s[2]);
                 count100 = ushort.Parse(s[3]);
                 count50 =  ushort.Parse(s[4]);
@@ -162,22 +155,12 @@ namespace UnitTests
                 PP = double.Parse(s[7], CultureInfo.InvariantCulture);
 
                 string modString = s[6].Trim(' ').Replace(" | ", string.Empty).ToUpper();
-                Mods = Helpers.StringToMods(modString);
+                mods = Helpers.StringToMods(modString);
             }
 
-            public PPv2Parameters ToParameters(Beatmap bm, DiffCalc d)
+            public PPv2Parameters ToParameters(Beatmap bm)
             {
-                return new PPv2Parameters {
-                    Beatmap = bm,
-                    AimStars = d.Aim,
-                    SpeedStars = d.Speed,
-                    Mods = Mods,
-                    Count300 = count300,
-                    Count100 = count100,
-                    Count50 = count50,
-                    CountMiss = countMiss,
-                    Combo = maxCombo
-                };
+                return new PPv2Parameters(bm, count100, count50, countMiss, combo, count300, mods);
             }
         }
     }

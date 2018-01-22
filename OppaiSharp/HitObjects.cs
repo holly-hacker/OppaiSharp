@@ -6,14 +6,14 @@ namespace OppaiSharp
     public class HitObject
     {
         /// <summary> Start time in milliseconds. </summary>
-        public double Time { get; set; } = 0.0;
-        public HitObjectType Type { get; set; } = HitObjectType.Circle;
+        public double Time { get; set; }
+        public HitObjectType Type { get; set; }
 
         /// <summary> An instance of Circle or Slider or null. </summary>
-        public object Data { get; set; } = null;
-        public Vector2 Normpos { get; set; } = new Vector2();
-        public Dictionary<StrainType, double> Strains { get; } = new Dictionary<StrainType, double> { { StrainType.Speed, 0.0 }, { StrainType.Aim, 0.0 } };
-        public bool IsSingle { get; internal set; } = false;
+        public object Data { get; set; }
+        public Vector2 Normpos { get; set; }
+        public Dictionary<StrainType, double> Strains { get; } = new Dictionary<StrainType, double>(2) { { StrainType.Speed, 0.0 }, { StrainType.Aim, 0.0 } };
+        public bool IsSingle { get; internal set; }
 
         /// <summary> String representation of the type bitmask. </summary>
         public string TypeString()

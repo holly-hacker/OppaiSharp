@@ -7,10 +7,10 @@ namespace OppaiSharp
         /// <summary> 
         /// If not null, MaxCombo, CountSliders, CountCircles, CountObjects, BaseAR, BaseOD will be obtained from this beatmap.
         /// </summary>
-        public Beatmap Beatmap = null;
+        public Beatmap Beatmap;
 
-        public double AimStars = 0.0;
-        public double SpeedStars = 0.0;
+        public double AimStars;
+        public double SpeedStars;
         public int MaxCombo = 0;
         public int CountSliders = 0, CountCircles = 0, CountObjects = 0;
 
@@ -31,10 +31,59 @@ namespace OppaiSharp
 
         /// <summary> number of 300s, if -1 it will default to CountObjects - Count100 - Count50 - nmiss </summary>
         public int Count300 = -1;
-        public int Count100 = 0, Count50 = 0, CountMiss = 0;
+        public int Count100, Count50, CountMiss;
 
         /// <summary> scorev1 (1) or scorev2 (2) </summary>
         public int ScoreVersion = 1;
+
+        public PPv2Parameters() { }
+
+        /// <param name="bm">The Beatmap object</param>
+        /// <param name="d">The DiffCalc object that ran on this beatmap</param>
+        /// <param name="c300">Amount of 300's. At least this or <paramref name="combo"/> has to be set.</param>
+        /// <param name="c100">Amount of 100's</param>
+        /// <param name="c50">Amount of 50's</param>
+        /// <param name="cMiss">Amount of misses</param>
+        /// <param name="combo">The combo reached by the player. At least this or <paramref name="c300"/> has to be set.</param>
+        /// <param name="mods">The used mods.</param>
+        public PPv2Parameters(Beatmap bm, DiffCalc d, int c100, int c50 = 0, int cMiss = 0, int combo = -1, int c300 = -1, Mods mods = Mods.NoMod)
+        {
+            //run DiffCalc if it hadn't yet
+            if (d.CountSingles == 0 && Math.Abs(d.Total) <= double.Epsilon)
+                d.Calc(bm, mods);
+
+            Beatmap = bm;
+            AimStars = d.Aim;
+            SpeedStars = d.Speed;
+            Count100 = c100;
+            Count50 = c50;
+            CountMiss = cMiss;
+            Combo = combo;
+            Count300 = c300;
+            Mods = mods;
+        }
+
+        /// <param name="bm">The beatmap, diffcalc will run on this.</param>
+        /// <param name="c300">Amount of 300's. At least this or <paramref name="combo"/> has to be set.</param>
+        /// <param name="c100">Amount of 100's</param>
+        /// <param name="c50">Amount of 50's</param>
+        /// <param name="cMiss">Amount of misses</param>
+        /// <param name="combo">The combo reached by the player. At least this or <paramref name="c300"/> has to be set.</param>
+        /// <param name="mods">The used mods.</param>
+        public PPv2Parameters(Beatmap bm, int c100, int c50 = 0, int cMiss = 0, int combo = -1, int c300 = -1, Mods mods = Mods.NoMod)
+        {
+            var d = new DiffCalc().Calc(bm, mods);
+
+            Beatmap = bm;
+            AimStars = d.Aim;
+            SpeedStars = d.Speed;
+            Count100 = c100;
+            Count50 = c50;
+            CountMiss = cMiss;
+            Combo = combo;
+            Count300 = c300;
+            Mods = mods;
+        }
     }
 
     public class PPv2
@@ -87,8 +136,8 @@ namespace OppaiSharp
             switch (scoreVersion)
             {
                 case 1:
-                    /* scorev1 ignores sliders since they are free 300s
-                    and for some reason also ignores spinners */
+                    //scorev1 ignores sliders since they are free 300s
+                    //and for some reason also ignores spinners
                     int countSpinners = countObjects - countSliders - countCircles;
 
                     realAcc = new Accuracy(count300 - countSliders - countSpinners, count100, count50, countMiss).Value();
@@ -115,7 +164,7 @@ namespace OppaiSharp
             double missPenality = Math.Pow(0.97, countMiss);
             double comboBreak = Math.Pow(combo, 0.8) / Math.Pow(maxCombo, 0.8);
 
-            /* calculate stats with mods */
+            //calculate stats with mods
             var mapstats = new MapStats {
                 AR = baseAR,
                 OD = baseOD
