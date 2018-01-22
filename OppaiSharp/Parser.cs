@@ -1,273 +1,209 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
 namespace OppaiSharp
 {
-    public class Parser
+    internal static class Parser
     {
-        /// <summary>
-        /// The parsed beatmap will be stored in this object.
-        /// Will persist throughout Reset() calls and will be reused by
-        /// subsequent parse calls until changed.
-        /// See <seealso cref="Reset"/>
-        /// </summary>
-        public Beatmap Beatmap { get; private set; }
-
-        /// <summary> True if the parsing completed successfully. </summary>
-        public bool Done { get; private set; }
-
-        /// <summary> Last line touched. </summary>
-        private string lastLine;
-
-        /// <summary> Last line number touched. </summary>
-        private int lastLineNumber;
-
-        /// <summary> Last token touched. </summary>
-        private string lastPos;
-
-        /// <summary> Current section </summary>
-        private string section;
-        private bool arFound = false;
-
-        public Parser() => Reset();
-
-        private void Reset()
-        {
-            lastLine = lastPos = section = "";
-            lastLineNumber = 0;
-            Done = false;
-            Beatmap?.Reset();
-        }
-
-        public override string ToString() => $"in line {lastLineNumber}\n{lastLine}\n> {lastPos}";
-
-        private void Warn(string fmt, params object[] args)
-        {
-            //TODO: to logger
-            Debug.WriteLine(string.Format("W: " + fmt, args));
-            Debug.WriteLine(this);
-        }
-
-        /// <summary>
-        /// Trims <paramref name="v"/>, sets lastpos to it and returns trimmed <paramref name="v"/>.
-        /// Should be used to access any string that can make the parser fail.
-        /// </summary>
-        private string Setlastpos(string v) => lastPos = v.Trim();
-
-        private string[] Property()
-        {
-            string[] split = lastLine.Split(new[] {':'}, 2);
-            split[0] = Setlastpos(split[0]);
-            if (split.Length > 1)
-                split[1] = Setlastpos(split[1]);
-            return split;
-        }
-
-        private void Metadata()
-        {
-            string[] p = Property();
-
-            switch (p[0]) {
-                case "Title":
-                    Beatmap.Title = p[1];
-                    break;
-                case "TitleUnicode":
-                    Beatmap.TitleUnicode = p[1];
-                    break;
-                case "Artist":
-                    Beatmap.Artist = p[1];
-                    break;
-                case "ArtistUnicode":
-                    Beatmap.ArtistUnicode = p[1];
-                    break;
-                case "Creator":
-                    Beatmap.Creator = p[1];
-                    break;
-                case "Version":
-                    Beatmap.Version = p[1];
-                    break;
-            }
-        }
-
-        private void General()
-        {
-            string[] p = Property();
-
-            switch (p[0]) {
-                case "Mode":
-                    Beatmap.Mode = (GameMode)int.Parse(Setlastpos(p[1]));
-
-                    if (Beatmap.Mode != GameMode.Standard)
-                        throw new InvalidOperationException("this gamemode is not yet supported");
-                    break;
-            }
-        }
-
-        private void Difficulty()
-        {
-            string[] p = Property();
-
-            switch (p[0]) {
-                case "CircleSize":
-                    Beatmap.CS = float.Parse(Setlastpos(p[1]));
-                    break;
-                case "OverallDifficulty":
-                    Beatmap.OD = float.Parse(Setlastpos(p[1]));
-                    break;
-                case "ApproachRate":
-                    Beatmap.AR = float.Parse(Setlastpos(p[1]));
-                    arFound = true;
-                    break;
-                case "HPDrainRate":
-                    Beatmap.HP = float.Parse(Setlastpos(p[1]));
-                    break;
-                case "SliderMultiplier":
-                    Beatmap.SliderVelocity = float.Parse(Setlastpos(p[1]));
-                    break;
-                case "SliderTickRate":
-                    Beatmap.TickRate = float.Parse(Setlastpos(p[1]));
-                    break;
-            }
-        }
-
-        private void Timing()
-        {
-            string[] s = lastLine.Split(',');
-
-            if (s.Length > 8)
-                Warn("timing point with trailing values");
-
-            var t = new Timing {
-                Time = double.Parse(Setlastpos(s[0])),
-                MsPerBeat = double.Parse(Setlastpos(s[1]))
-            };
-
-            if (s.Length >= 7)
-                t.Change = s[6].Trim() != "0";
-
-            Beatmap.TimingPoints.Add(t);
-        }
-
-        private void Objects()
-        {
-            string[] s = lastLine.Split(',');
-
-            if (s.Length > 11)
-                Warn("object with trailing values");
-
-            var obj = new HitObject {
-                Time = double.Parse(Setlastpos(s[2])),
-                Type = (HitObjectType)int.Parse(Setlastpos(s[3]))
-            };
-
-            if ((obj.Type & HitObjectType.Circle) != 0) {
-                Beatmap.CountCircles++;
-                obj.Data = new Circle {
-                    Position = new Vector2 {
-                        X = double.Parse(Setlastpos(s[0])),
-                        Y = double.Parse(Setlastpos(s[1]))
-                    }
-                };
-            }
-            if ((obj.Type & HitObjectType.Spinner) != 0) {
-                Beatmap.CountSpinners++;
-            }
-            if ((obj.Type & HitObjectType.Slider) != 0) {
-                Beatmap.CountSliders++;
-                obj.Data = new Slider {
-                    Position = {
-                        X = double.Parse(Setlastpos(s[0])),
-                        Y = double.Parse(Setlastpos(s[1]))
-                    },
-                    Repetitions = int.Parse(Setlastpos(s[6])),
-                    Distance = double.Parse(Setlastpos(s[7]))
-                };
-            }
-
-            Beatmap.Objects.Add(obj);
-        }
-
         /// <summary>
         /// Calls Reset() on beatmap and parses a osu file into it.
         /// If beatmap is null, it will be initialized to a new Beatmap
         /// </summary>
         /// <returns><see cref="Beatmap"/></returns>
-        public Beatmap Map(StreamReader reader)
+        public static Beatmap Read(StreamReader reader)
         {
-            string line;
+            var bm = new Beatmap();
 
-            if (Beatmap == null)
-                Beatmap = new Beatmap();
-
-            Reset();
-
+            string line, section = null;
             while ((line = reader.ReadLine()) != null) {
-                lastLine = line;
-                lastLineNumber++;
-
                 //comments (according to lazer)
-                if (line.StartsWith(" ") || line.StartsWith("_")) {
+                if (line.StartsWith(" ") || line.StartsWith("_"))
                     continue;
-                }
 
-                line = lastLine = line.Trim();
-                if (line.Length <= 0) {
+                line = line.Trim();
+                if (line.Length <= 0)
                     continue;
-                }
 
                 //c++ style comments
-                if (line.StartsWith("//")) {
+                if (line.StartsWith("//"))
                     continue;
-                }
 
                 //[SectionName]
-                if (line.StartsWith("[")) {
+                //don't continue here, the read methods will start reading at the next line
+                if (line.StartsWith("["))
                     section = line.Substring(1, line.Length - 2);
-                    continue;
-                }
 
                 switch (section) {
                     case "Metadata":
-                        Metadata();
+                        foreach (var s in ReadSectionPairs(reader)) {
+                            var val = s.Value;
+                            switch (s.Key) {
+                                case "Title":
+                                    bm.Title = val;
+                                    break;
+                                case "TitleUnicode":
+                                    bm.TitleUnicode = val;
+                                    break;
+                                case "Artist":
+                                    bm.Artist = val;
+                                    break;
+                                case "ArtistUnicode":
+                                    bm.ArtistUnicode = val;
+                                    break;
+                                case "Creator":
+                                    bm.Creator = val;
+                                    break;
+                                case "Version":
+                                    bm.Version = val;
+                                    break;
+                            }
+                        }
                         break;
                     case "General":
-                        General();
+                        foreach (var pair in ReadSectionPairs(reader))
+                            if (pair.Key == "Mode")
+                                bm.Mode = (GameMode)int.Parse(pair.Value);
                         break;
                     case "Difficulty":
-                        Difficulty();
+                        bool arFound = false;
+                        foreach (var s in ReadSectionPairs(reader)) {
+                            var val = s.Value;
+                            switch (s.Key) {
+                                case "CircleSize":
+                                    bm.CS = float.Parse(val);
+                                    break;
+                                case "OverallDifficulty":
+                                    bm.OD = float.Parse(val);
+                                    break;
+                                case "ApproachRate":
+                                    bm.AR = float.Parse(val);
+                                    arFound = true;
+                                    break;
+                                case "HPDrainRate":
+                                    bm.HP = float.Parse(val);
+                                    break;
+                                case "SliderMultiplier":
+                                    bm.SliderVelocity = float.Parse(val);
+                                    break;
+                                case "SliderTickRate":
+                                    bm.TickRate = float.Parse(val);
+                                    break;
+                            }
+                        }
+                        if (!arFound)
+                            bm.OD = bm.AR;
                         break;
                     case "TimingPoints":
-                        Timing();
+                        foreach (var ptLine in ReadSectionLines(reader)) {
+                            string[] splitted = ptLine.Split(',');
+
+                            if (splitted.Length > 8)
+                                Warn("timing point with trailing values");
+
+                            var t = new Timing {
+                                Time = double.Parse(splitted[0]),
+                                MsPerBeat = double.Parse(splitted[1])
+                            };
+
+                            if (splitted.Length >= 7)
+                                t.Change = splitted[6].Trim() != "0";
+
+                            bm.TimingPoints.Add(t);
+                        }
                         break;
                     case "HitObjects":
-                        Objects();
+                        foreach (var objLine in ReadSectionLines(reader)) {
+                            string[] s = objLine.Split(',');
+
+                            if (s.Length > 11)
+                                Warn("object with trailing values");
+
+                            var obj = new HitObject {
+                                Time = double.Parse(s[2]),
+                                Type = (HitObjectType)int.Parse(s[3])
+                            };
+
+                            if ((obj.Type & HitObjectType.Circle) != 0)
+                            {
+                                bm.CountCircles++;
+                                obj.Data = new Circle {
+                                    Position = new Vector2 {
+                                        X = double.Parse(s[0]),
+                                        Y = double.Parse(s[1])
+                                    }
+                                };
+                            }
+                            if ((obj.Type & HitObjectType.Spinner) != 0)
+                            {
+                                bm.CountSpinners++;
+                            }
+                            if ((obj.Type & HitObjectType.Slider) != 0)
+                            {
+                                bm.CountSliders++;
+                                obj.Data = new Slider {
+                                    Position = {
+                                        X = double.Parse(s[0]),
+                                        Y = double.Parse(s[1])
+                                    },
+                                    Repetitions = int.Parse(s[6]),
+                                    Distance = double.Parse(s[7])
+                                };
+                            }
+
+                            bm.Objects.Add(obj);
+                        }
                         break;
                     default:
                         int fmtIndex = line.IndexOf("file format v", StringComparison.Ordinal);
                         if (fmtIndex < 0)
                             continue;
 
-                        Beatmap.FormatVersion = int.Parse(
-                            line.Substring(fmtIndex + "file format v".Length)
-                        );
+                        bm.FormatVersion = int.Parse(line.Substring(fmtIndex + "file format v".Length));
                         break;
                 }
             }
-
-            if (!arFound) {
-                Beatmap.AR = Beatmap.OD;
-            }
-
-            Done = true;
-            return Beatmap;
+            return bm;
         }
 
-        /// <summary> sets beatmap and returns map(reader) </summary>
-        /// <returns><see cref="Beatmap"/></returns>
-        public Beatmap Map(StreamReader reader, Beatmap beatmap) {
-            Beatmap = beatmap;
-            return Map(reader);
+        //IEnumerable<KeyValuePair<string, string>>
+        private static Dictionary<string, string> ReadSectionPairs(StreamReader sr)
+        {
+            var dic = new Dictionary<string, string>();
+
+            string line;
+            while (!string.IsNullOrEmpty(line = sr.ReadLine().Trim()))
+            {
+                int i = line.IndexOf(':');
+
+                if (i == -1)
+                    throw new Exception("Invalid key/value line: " + line);
+
+                string key = line.Substring(0, i);
+                string value = line.Substring(i + 1);
+
+                dic.Add(key.TrimEnd(), value.TrimStart());
+            }
+
+            return dic;
+        }
+
+        private static List<string> ReadSectionLines(StreamReader sr)
+        {
+            var list = new List<string>();
+
+            string line;
+            while (!string.IsNullOrEmpty(line = sr.ReadLine()?.Trim()))
+                list.Add(line);
+
+            return list;
+        }
+
+        [Conditional("DEBUG")]
+        private static void Warn(string fmt, params object[] args)
+        {
+            Debug.WriteLine(string.Format("W: " + fmt, args));
         }
     }
 }

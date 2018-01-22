@@ -59,7 +59,7 @@ namespace OppaiSharp
                 mode = beatmap.Mode;
                 baseAR = beatmap.AR;
                 baseOD = beatmap.OD;
-                maxCombo = beatmap.MaxCombo();
+                maxCombo = beatmap.GetMaxCombo();
                 countSliders = beatmap.CountSliders;
                 countCircles = beatmap.CountCircles;
                 countObjects = beatmap.Objects.Count;

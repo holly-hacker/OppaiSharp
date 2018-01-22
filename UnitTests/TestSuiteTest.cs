@@ -67,7 +67,7 @@ namespace UnitTests
                         ms.Seek(0, SeekOrigin.Begin);
 
                         sw.Restart();
-                        bm = new Parser().Map(str);
+                        bm = Beatmap.Read(str);
                         sw.Stop();
                         output.WriteLine($"'{bm.Artist} - {bm.Title} [{bm.Version}] (mapped by {bm.Creator})' (Parse: {sw.Elapsed})");
 
@@ -95,7 +95,7 @@ namespace UnitTests
             var stream = new MemoryStream(data, false);
             var reader = new StreamReader(stream);
             //read a beatmap
-            var beatmap = new Parser().Map(reader);
+            var beatmap = Beatmap.Read(reader);
 
             //calculate star ratings for HDDT
             Mods mods = Mods.Hidden | Mods.DoubleTime;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace OppaiSharp
@@ -22,30 +23,19 @@ namespace OppaiSharp
         public int CountCircles { get; set; }
         public int CountSliders { get; set; }
         public int CountSpinners { get; set; }
-        public float HP { get; set; }
-        public float CS { get; set; }
-        public float OD { get; set; }
-        public float AR { get; set; }
-        public float SliderVelocity { get; set; }
-        public float TickRate { get; set; }
+        public float HP { get; set; } = 5f;
+        public float CS { get; set; } = 5f;
+        public float OD { get; set; } = 5f;
+        public float AR { get; set; } = 5f;
+        public float SliderVelocity { get; set; } = 1f;
+        public float TickRate { get; set; } = 1f;
 
         public List<HitObject> Objects { get; } = new List<HitObject>(512);
         public List<Timing> TimingPoints { get; } = new List<Timing>(32);
 
-        public Beatmap() => Reset();
+        public static Beatmap Read(StreamReader reader) => Parser.Read(reader);
 
-        /// <summary>Clears the instance so that it can be reused</summary>
-        public void Reset()
-        {
-            Title = TitleUnicode = Artist = ArtistUnicode = Creator = Version = "";
-
-            CountCircles = CountSliders = CountSpinners = 0;
-            HP = CS = OD = AR = 5.0f;
-            SliderVelocity = TickRate = 1.0f;
-
-            Objects.Clear();
-            TimingPoints.Clear();
-        }
+        internal Beatmap() { }
 
         public override string ToString()
         {
@@ -78,7 +68,7 @@ namespace OppaiSharp
                     + $"tpoints=[ {timingPoints} ], objects=[ {objects} ] }}";
         }
 
-        public int MaxCombo()
+        public int GetMaxCombo()
         {
             int res = 0;
             int tIndex = -1;
