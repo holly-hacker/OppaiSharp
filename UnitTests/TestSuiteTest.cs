@@ -1,18 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OppaiSharp;
-using SharpCompress.Archives;
-using SharpCompress.Archives.Tar;
-using SharpCompress.Common;
 using SharpCompress.Common.Tar;
 using SharpCompress.Readers;
-using SharpCompress.Readers.Tar;
 
 namespace UnitTests
 {
@@ -63,18 +59,26 @@ namespace UnitTests
                     uint id = uint.Parse(fileName.Split('/').Last().Split('.').First());
 
                     Beatmap bm;
+                    Stopwatch sw = new Stopwatch();
                     using (var ms = new MemoryStream())
                     using (var str = new StreamReader(ms)) {
                         reader.WriteEntryTo(ms);
                         ms.Seek(0, SeekOrigin.Begin);
 
+                        sw.Restart();
                         bm = new Parser().Map(str);
+                        sw.Stop();
+                        Console.WriteLine($"'{bm.Artist} - {bm.Title} [{bm.Version}] (mapped by {bm.Creator})' (Parse: {sw.Elapsed})");
 
                         foreach (var testcase in testCases.Where(a => a.Item1 == id).Select(a => a.Item2))
                         {
                             var expected = testcase.PP;
+
+                            sw.Restart();
                             var actual = CheckCase(bm, testcase, out double margin);
-                            Console.WriteLine($"Testing {expected:F2}pp vs {actual:F2}pp");
+                            sw.Stop();
+
+                            Console.WriteLine($"{expected:F2}pp vs {actual:F2}pp, \t{Math.Abs(actual - expected):F2}pp difference (Calc {sw.Elapsed})");
                             Assert.AreEqual(expected, actual, margin);
                         }
                     }
