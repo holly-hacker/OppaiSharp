@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 
 namespace OppaiSharp
@@ -72,23 +73,23 @@ namespace OppaiSharp
                             var val = s.Value;
                             switch (s.Key) {
                                 case "CircleSize":
-                                    bm.CS = float.Parse(val);
+                                    bm.CS = float.Parse(val, CultureInfo.InvariantCulture);
                                     break;
                                 case "OverallDifficulty":
-                                    bm.OD = float.Parse(val);
+                                    bm.OD = float.Parse(val, CultureInfo.InvariantCulture);
                                     break;
                                 case "ApproachRate":
-                                    bm.AR = float.Parse(val);
+                                    bm.AR = float.Parse(val, CultureInfo.InvariantCulture);
                                     arFound = true;
                                     break;
                                 case "HPDrainRate":
-                                    bm.HP = float.Parse(val);
+                                    bm.HP = float.Parse(val, CultureInfo.InvariantCulture);
                                     break;
                                 case "SliderMultiplier":
-                                    bm.SliderVelocity = float.Parse(val);
+                                    bm.SliderVelocity = float.Parse(val, CultureInfo.InvariantCulture);
                                     break;
                                 case "SliderTickRate":
-                                    bm.TickRate = float.Parse(val);
+                                    bm.TickRate = float.Parse(val, CultureInfo.InvariantCulture);
                                     break;
                             }
                         }
@@ -103,8 +104,8 @@ namespace OppaiSharp
                                 Warn("timing point with trailing values");
 
                             var t = new Timing {
-                                Time = double.Parse(splitted[0]),
-                                MsPerBeat = double.Parse(splitted[1])
+                                Time = double.Parse(splitted[0], CultureInfo.InvariantCulture),
+                                MsPerBeat = double.Parse(splitted[1], CultureInfo.InvariantCulture)
                             };
 
                             if (splitted.Length >= 7)
@@ -121,7 +122,7 @@ namespace OppaiSharp
                                 Warn("object with trailing values");
 
                             var obj = new HitObject {
-                                Time = double.Parse(s[2]),
+                                Time = double.Parse(s[2], CultureInfo.InvariantCulture),
                                 Type = (HitObjectType)int.Parse(s[3])
                             };
 
@@ -130,8 +131,8 @@ namespace OppaiSharp
                                 bm.CountCircles++;
                                 obj.Data = new Circle {
                                     Position = new Vector2 {
-                                        X = double.Parse(s[0]),
-                                        Y = double.Parse(s[1])
+                                        X = double.Parse(s[0], CultureInfo.InvariantCulture),
+                                        Y = double.Parse(s[1], CultureInfo.InvariantCulture)
                                     }
                                 };
                             }
@@ -144,11 +145,11 @@ namespace OppaiSharp
                                 bm.CountSliders++;
                                 obj.Data = new Slider {
                                     Position = {
-                                        X = double.Parse(s[0]),
-                                        Y = double.Parse(s[1])
+                                        X = double.Parse(s[0], CultureInfo.InvariantCulture),
+                                        Y = double.Parse(s[1], CultureInfo.InvariantCulture)
                                     },
                                     Repetitions = int.Parse(s[6]),
-                                    Distance = double.Parse(s[7])
+                                    Distance = double.Parse(s[7], CultureInfo.InvariantCulture)
                                 };
                             }
 
