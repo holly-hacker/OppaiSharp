@@ -12,8 +12,9 @@
     <PackageLicenseUrl>https://github.com/HoLLy-HaCKeR/OppaiSharp/blob/master/LICENSE</PackageLicenseUrl>
     <RepositoryType>Git</RepositoryType>
     <PackageTags>osu! osu pp</PackageTags>
-    <PackageReleaseNotes>Make API easier to use. Breaking changes compared to v1.0.0.</PackageReleaseNotes>
-    <Version>2.0.0</Version>
+    <PackageReleaseNotes>Fix major bug which broke beatmap parsing on ~50% of all computers;
+Fix bug where too many sliders or 100's would not be accepted.</PackageReleaseNotes>
+    <Version>2.0.1</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
