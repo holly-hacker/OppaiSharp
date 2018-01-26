@@ -140,7 +140,7 @@ namespace OppaiSharp
                     //and for some reason also ignores spinners
                     int countSpinners = countObjects - countSliders - countCircles;
 
-                    realAcc = new Accuracy(count300 - countSliders - countSpinners, count100, count50, countMiss).Value();
+                    realAcc = new Accuracy(Math.Max(count300 - countSliders - countSpinners, 0), count100, count50, countMiss).Value();
 
                     realAcc = Math.Max(0.0, realAcc);
                     break;

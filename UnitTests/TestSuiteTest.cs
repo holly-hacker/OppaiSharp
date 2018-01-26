@@ -90,10 +90,11 @@ namespace UnitTests
         [Fact]
         public void TestSinglePlay()
         {
-            byte[] data = new WebClient().DownloadData("https://osu.ppy.sh/osu/774965");
+            const int id = 774965;
+            if (!File.Exists($"{id}.osu"))
+                new WebClient().DownloadFile($"https://osu.ppy.sh/osu/{id}", $"{id}.osu");
 
-            var stream = new MemoryStream(data, false);
-            var reader = new StreamReader(stream);
+            var reader = new StreamReader($"{id}.osu");
 
             //read a beatmap
             var beatmap = Beatmap.Read(reader);
@@ -110,6 +111,23 @@ namespace UnitTests
                               $"speed pp) and has an accuracy of {pp.ComputedAccuracy.Value() * 100:F2}%");
 
             Assert.InRange(817.0, pp.Total - 1, pp.Total + 1);
+        }
+
+        [Fact]
+        public void TestManyHundreds()
+        {
+            const int id = 706711;
+            if (!File.Exists($"{id}.osu"))
+                new WebClient().DownloadFile($"https://osu.ppy.sh/osu/{id}", $"{id}.osu");
+
+            var reader = new StreamReader($"{id}.osu");
+
+            //read a beatmap
+            var beatmap = Beatmap.Read(reader);
+            var stars = new DiffCalc().Calc(beatmap);
+            var pp = new PPv2(new PPv2Parameters(beatmap, stars, beatmap.CountCircles + 1));
+
+            //not checking the actual value, just making sure that it doesn't throw
         }
 
         private static double CheckCase(Beatmap bm, ExpectedOutcome outcome, out double margin)
