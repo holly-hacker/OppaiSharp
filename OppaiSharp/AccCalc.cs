@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace OppaiSharp
 {
@@ -80,9 +80,9 @@ namespace OppaiSharp
             if (countObjects < 0 && Count300 < 0)
                 throw new ArgumentException($"Either {nameof(countObjects)} or {nameof(Count300)} must be specified");
 
-            int count300 = Count300 > 0 
+            int count300 = Math.Max(Count300 > 0 
                 ? Count300 
-                : countObjects - Count100 - Count50 - CountMiss;
+                : countObjects - Count100 - Count50 - CountMiss, 0);
 
             if (countObjects < 0)
                 countObjects = count300 + Count100 + Count50 + CountMiss;
