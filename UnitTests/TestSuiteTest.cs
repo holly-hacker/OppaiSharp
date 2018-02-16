@@ -50,6 +50,16 @@ namespace UnitTests
         [Fact]
         public void TestEntireSuite()
         {
+            var swDecompression = new Stopwatch();
+            var swParsing = new Stopwatch();
+            var swCalculating = new Stopwatch();
+            int beatmaps = 0;
+            int totalCases = 0;
+            double totalDiffSub100 = 0.0;
+            double totalDiffSub200 = 0.0;
+            double totalDiffSub300 = 0.0;
+            double totalDiffOver300 = 0.0;
+
             using (var stream = new FileStream(SuitePath, FileMode.Open))
             using (var reader = ReaderFactory.Open(stream)) {
                 while (reader.MoveToNextEntry()) {
@@ -60,31 +70,54 @@ namespace UnitTests
                     uint id = uint.Parse(fileName.Split('/').Last().Split('.').First());
 
                     Beatmap bm;
-                    Stopwatch sw = new Stopwatch();
                     using (var ms = new MemoryStream())
                     using (var str = new StreamReader(ms)) {
+                        swDecompression.Start();
                         reader.WriteEntryTo(ms);
+                        swDecompression.Stop();
                         ms.Seek(0, SeekOrigin.Begin);
 
-                        sw.Restart();
+                        ++beatmaps;
+                        swParsing.Start();
                         bm = Beatmap.Read(str);
-                        sw.Stop();
-                        output.WriteLine($"'{bm.Artist} - {bm.Title} [{bm.Version}] (mapped by {bm.Creator})' (Parse: {sw.Elapsed})");
+                        swParsing.Stop();
 
                         foreach (var testcase in testCases.Where(a => a.Item1 == id).Select(a => a.Item2))
                         {
                             var expected = testcase.PP;
 
-                            sw.Restart();
+                            ++totalCases;
+                            swCalculating.Start();
                             var actual = CheckCase(bm, testcase, out double margin);
-                            sw.Stop();
+                            swCalculating.Stop();
 
-                            output.WriteLine($"{expected:F2}pp vs {actual:F2}pp, \t{Math.Abs(actual - expected):F2}pp difference (Calc {sw.Elapsed}, margin {margin})");
-                            Assert.InRange(actual, expected - margin, expected + margin);   //TODO: margin /= 2
+                            var diff = Math.Abs(actual - expected);
+
+                            if (expected < 100)
+                                totalDiffSub100 += diff;
+                            else if (expected < 200)
+                                totalDiffSub200 += diff;
+                            else if (expected < 300)
+                                totalDiffSub300 += diff;
+                            else
+                                totalDiffOver300 += diff;
+
+                            Assert.InRange(actual, expected - margin, expected + margin);
                         }
                     }
                 }
             }
+
+            var totalDiff = totalDiffSub100 + totalDiffSub200 + totalDiffSub300 + totalDiffOver300;
+            var totalDiffWeighted = totalDiffSub100/3 + totalDiffSub200/2 + totalDiffSub300/1.5 + totalDiffOver300;
+            output.WriteLine($"Test passed for {beatmaps} beatmaps with {totalCases} total cases");
+            output.WriteLine($"Average PP difference: {totalDiff/totalCases:F3}");
+            output.WriteLine($"Average PP difference (weighted): {totalDiffWeighted/totalCases:F3}");
+            output.WriteLine("");
+            output.WriteLine($"Decompression time (avg/total): {TimeSpan.FromTicks(swDecompression.Elapsed.Ticks / beatmaps)} / {swDecompression.Elapsed}");
+            output.WriteLine($"Parsing time (avg/total):       {TimeSpan.FromTicks(swParsing.Elapsed.Ticks / beatmaps)} / {swParsing.Elapsed}");
+            output.WriteLine($"Calculating time (avg/total):   {TimeSpan.FromTicks(swCalculating.Elapsed.Ticks / totalCases)} / {swCalculating.Elapsed}");
+            output.WriteLine($"Total parsing + calculating time:                  {swParsing.Elapsed + swCalculating.Elapsed}");
         }
 
         [Fact]
