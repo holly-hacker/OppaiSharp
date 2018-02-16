@@ -9,8 +9,7 @@ namespace OppaiSharp
     internal static class Parser
     {
         /// <summary>
-        /// Calls Reset() on beatmap and parses a osu file into it.
-        /// If beatmap is null, it will be initialized to a new Beatmap
+        /// Reads a beatmap from a file.
         /// </summary>
         /// <returns><see cref="Beatmap"/></returns>
         public static Beatmap Read(StreamReader reader)
@@ -18,27 +17,22 @@ namespace OppaiSharp
             var bm = new Beatmap();
 
             string line, section = null;
-            while ((line = reader.ReadLine()) != null) {
-                //comments (according to lazer)
-                if (line.StartsWith(" ") || line.StartsWith("_"))
+            while ((line = reader.ReadLine()?.Trim()) != null) {
+                //any comments
+                if (line.StartsWith("_") || line.StartsWith("//"))
                     continue;
-
-                line = line.Trim();
-                if (line.Length <= 0)
-                    continue;
-
-                //c++ style comments
-                if (line.StartsWith("//"))
-                    continue;
-
-                //[SectionName]
+                
+                whileLoopStart:
                 //don't continue here, the read methods will start reading at the next line
                 if (line.StartsWith("["))
                     section = line.Substring(1, line.Length - 2);
 
+                if (line.Length <= 0)
+                    continue;
+
                 switch (section) {
                     case "Metadata":
-                        foreach (var s in ReadSectionPairs(reader)) {
+                        foreach (var s in ReadSectionPairs(reader, out line)) {
                             var val = s.Value;
                             switch (s.Key) {
                                 case "Title":
@@ -63,13 +57,13 @@ namespace OppaiSharp
                         }
                         break;
                     case "General":
-                        foreach (var pair in ReadSectionPairs(reader))
+                        foreach (var pair in ReadSectionPairs(reader, out line))
                             if (pair.Key == "Mode")
                                 bm.Mode = (GameMode)int.Parse(pair.Value);
                         break;
                     case "Difficulty":
                         bool arFound = false;
-                        foreach (var s in ReadSectionPairs(reader)) {
+                        foreach (var s in ReadSectionPairs(reader, out line)) {
                             var val = s.Value;
                             switch (s.Key) {
                                 case "CircleSize":
@@ -97,7 +91,7 @@ namespace OppaiSharp
                             bm.OD = bm.AR;
                         break;
                     case "TimingPoints":
-                        foreach (var ptLine in ReadSectionLines(reader)) {
+                        foreach (var ptLine in ReadSectionLines(reader, out line)) {
                             string[] splitted = ptLine.Split(',');
 
                             if (splitted.Length > 8)
@@ -115,7 +109,7 @@ namespace OppaiSharp
                         }
                         break;
                     case "HitObjects":
-                        foreach (var objLine in ReadSectionLines(reader)) {
+                        foreach (var objLine in ReadSectionLines(reader, out line)) {
                             string[] s = objLine.Split(',');
 
                             if (s.Length > 11)
@@ -164,22 +158,29 @@ namespace OppaiSharp
                         bm.FormatVersion = int.Parse(line.Substring(fmtIndex + "file format v".Length));
                         break;
                 }
+
+                //in hand-edited beatmap, it's possible that the section header doesn't come after a newline
+                //if that is the case, this check stops us from skipping this line
+                if (line?.StartsWith("[") == true)
+                    goto whileLoopStart;
             }
             return bm;
         }
 
-        //IEnumerable<KeyValuePair<string, string>>
-        private static Dictionary<string, string> ReadSectionPairs(StreamReader sr)
+        private static Dictionary<string, string> ReadSectionPairs(StreamReader sr, out string line)
         {
             var dic = new Dictionary<string, string>();
 
-            string line;
-            while (!string.IsNullOrEmpty(line = sr.ReadLine().Trim()))
+            while (!string.IsNullOrEmpty(line = sr.ReadLine().Trim()) && !line.StartsWith("["))
             {
                 int i = line.IndexOf(':');
 
                 if (i == -1)
+#if DEBUG
                     throw new Exception("Invalid key/value line: " + line);
+#else
+                    continue;
+#endif
 
                 string key = line.Substring(0, i);
                 string value = line.Substring(i + 1);
@@ -190,12 +191,11 @@ namespace OppaiSharp
             return dic;
         }
 
-        private static List<string> ReadSectionLines(StreamReader sr)
+        private static List<string> ReadSectionLines(StreamReader sr, out string line)
         {
             var list = new List<string>();
 
-            string line;
-            while (!string.IsNullOrEmpty(line = sr.ReadLine()?.Trim()))
+            while (!string.IsNullOrEmpty(line = sr.ReadLine()?.Trim()) && !line.StartsWith("["))
                 list.Add(line);
 
             return list;

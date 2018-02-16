@@ -11,10 +11,9 @@
     <RepositoryUrl>https://github.com/HoLLy-HaCKeR/OppaiSharp/</RepositoryUrl>
     <PackageLicenseUrl>https://github.com/HoLLy-HaCKeR/OppaiSharp/blob/master/LICENSE</PackageLicenseUrl>
     <RepositoryType>Git</RepositoryType>
-    <PackageTags>osu! osu pp</PackageTags>
-    <PackageReleaseNotes>Fix major bug which broke beatmap parsing on ~50% of all computers;
-Fix bug where too many sliders or 100's would not be accepted.</PackageReleaseNotes>
-    <Version>2.0.1</Version>
+    <PackageTags>osu! osu pp oppai</PackageTags>
+    <PackageReleaseNotes>Make beatmap parser more lenient with manually edited beatmaps</PackageReleaseNotes>
+    <Version>2.0.2</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
