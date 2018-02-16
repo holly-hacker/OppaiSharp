@@ -165,8 +165,8 @@ namespace OppaiSharp
                     + $" hp={HP}, cs={CS}, od={OD}, ar={AR}, sv={SliderVelocity}, tick_rate={TickRate}, " 
                     + $"tpoints=[ {timingPoints} ], objects=[ {objects} ] }}";
         }
-
-        public int GetMaxCombo()
+        
+        public int GetMaxCombo(bool onlyCount300=false)
         {
             int res = 0;
             int tIndex = -1;
@@ -175,7 +175,8 @@ namespace OppaiSharp
 
             foreach (HitObject obj in Objects)
             {
-                if ((obj.Type & HitObjectType.Slider) == 0) {
+                if (onlyCount300 || (obj.Type & HitObjectType.Slider) == 0)
+                {
                     //non-sliders add 1 combo
                     res++;
                     continue;
