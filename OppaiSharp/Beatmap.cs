@@ -92,26 +92,36 @@ namespace OppaiSharp
             }
         }
 
-        public void Cut(int endTime)
+        public void Cut(int startTime, int endTime)
         {
             if (endTime <= 0)
+                throw new ArgumentException(nameof(endTime));
+            if (startTime < 0 || startTime > endTime)
                 throw new ArgumentException(nameof(endTime));
             Cutting = true;
             CutObjects = new List<HitObject>();
             foreach (var o in _allObjects)
             {
+                //Assuming chronological order
+                if (o.Time < startTime)
+                    continue;
                 if (o.Time < endTime)
                     CutObjects.Add(o);
-                else//Assuming chronological order
+                else
                     break;
+
             }
             CutTimingPoints = new List<Timing>();
             foreach (var t in AllTimingPoints)
             {
+                //Assuming chronological order
+                if (t.Time < startTime)
+                    continue;
                 if (t.Time < endTime)
                     CutTimingPoints.Add(t);
-                else//Assuming chronological order
+                else 
                     break;
+
             }
             _cutCountCircles = 0;
             _cutCountSpinners = 0;
