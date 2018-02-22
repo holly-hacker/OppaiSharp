@@ -128,11 +128,11 @@ namespace OppaiSharp
             _cutCountSliders = 0;
             foreach (var o in CutObjects)
             {
-                if (o.Type == HitObjectType.Circle)
+                if ((o.Type & HitObjectType.Circle) != 0)
                     _cutCountCircles++;
-                else if (o.Type == HitObjectType.Slider)
+                else if ((o.Type & HitObjectType.Slider) != 0)
                     _cutCountSliders++;
-                else if (o.Type == HitObjectType.Spinner)
+                else if ((o.Type & HitObjectType.Spinner) != 0)
                     _cutCountSpinners++;
             }
         }
