@@ -88,7 +88,7 @@ namespace OppaiSharp
                             }
                         }
                         if (!arFound)
-                            bm.OD = bm.AR;
+                            bm.AR = bm.OD;
                         break;
                     case "TimingPoints":
                         foreach (var ptLine in ReadSectionLines(reader, out line)) {
