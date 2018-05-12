@@ -96,6 +96,11 @@ namespace OppaiSharp
 
                             if (splitted.Length > 8)
                                 Warn("timing point with trailing values");
+                            else if (splitted.Length < 7) {
+                                Warn("timing point with too little values");
+                                continue;
+                            }
+
 
                             var t = new Timing {
                                 Time = double.Parse(splitted[0], CultureInfo.InvariantCulture),
@@ -114,6 +119,10 @@ namespace OppaiSharp
 
                             if (s.Length > 11)
                                 Warn("object with trailing values");
+                            else if (s.Length < 5) {
+                                Warn("object with too little values");
+                                continue;
+                            }
 
                             var obj = new HitObject {
                                 Time = double.Parse(s[2], CultureInfo.InvariantCulture),

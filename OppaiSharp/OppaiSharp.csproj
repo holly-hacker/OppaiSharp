@@ -12,8 +12,8 @@
     <PackageLicenseUrl>https://github.com/HoLLy-HaCKeR/OppaiSharp/blob/master/LICENSE</PackageLicenseUrl>
     <RepositoryType>Git</RepositoryType>
     <PackageTags>osu! osu pp oppai</PackageTags>
-    <PackageReleaseNotes>Fix wrong AR value being set if AR is not found</PackageReleaseNotes>
-    <Version>2.0.3</Version>
+    <PackageReleaseNotes>Don't die on bad timingpoints or hitobjects</PackageReleaseNotes>
+    <Version>2.0.4</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
