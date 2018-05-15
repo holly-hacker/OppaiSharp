@@ -128,7 +128,6 @@ namespace OppaiSharp
                 CutTimingPoints.Add(AllTimingPoints[AllTimingPoints.Count - 1]);
 
             _cutCountCircles = 0;
-            _cutCountCircles = 0;
             _cutCountSpinners = 0;
             _cutCountSliders = 0;
             foreach (var o in CutObjects)
