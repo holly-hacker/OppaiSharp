@@ -123,6 +123,11 @@ namespace OppaiSharp
                     break;
 
             }
+
+            if (CutTimingPoints.Count == 0 && AllTimingPoints.Count > 0)
+                CutTimingPoints.Add(AllTimingPoints[AllTimingPoints.Count - 1]);
+
+            _cutCountCircles = 0;
             _cutCountCircles = 0;
             _cutCountSpinners = 0;
             _cutCountSliders = 0;
