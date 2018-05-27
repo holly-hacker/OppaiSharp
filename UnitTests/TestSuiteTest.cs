@@ -15,7 +15,7 @@ namespace UnitTests
 {
     public class TestSuiteTest
     {
-        private const string SuitePath = "test_suite_20170811.tar.xz";
+        private const string SuitePath = "test_suite_20180515.tar.xz";
         private const string SuiteUrl = "http://www.hnng.moe/stuff/" + SuitePath;
         private const string SuiteExpectedPath = "TestSuite.txt";
 
@@ -139,11 +139,11 @@ namespace UnitTests
 
             //calculate the PP for this map
             //the play has no misses or 50's, so we don't specify it
-            var pp = new PPv2(new PPv2Parameters(beatmap, stars, c100: 8, mods: mods));
+            var pp = new PPv2(new PPv2Parameters(beatmap, stars, c100: 8, mods: mods,combo: 1773));
             output.WriteLine($"Play is worth {pp.Total:F2}pp ({pp.Aim:F2} aim pp, {pp.Acc:F2} acc pp, {pp.Speed:F2} " +
                               $"speed pp) and has an accuracy of {pp.ComputedAccuracy.Value() * 100:F2}%");
 
-            Assert.InRange(817.0, pp.Total - 1, pp.Total + 1);
+            Assert.InRange(775.99, pp.Total - 1, pp.Total + 1);
         }
 
         [Fact]
