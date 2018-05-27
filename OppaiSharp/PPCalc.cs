@@ -193,7 +193,9 @@ namespace OppaiSharp
             Aim *= arBonus;
 
             if ((mods & Mods.Hidden) != 0)
-                Aim *= 1.18;
+            {
+                Aim *= 1.02f + (11.0f - mapstats.AR) / 50.0f;
+            }
 
             if ((mods & Mods.Flashlight) != 0)
                 Aim *= 1.45 * lengthBonus;
@@ -211,6 +213,11 @@ namespace OppaiSharp
             Speed *= comboBreak;
             Speed *= accBonus;
             Speed *= odBonus;
+
+            if ((mods & Mods.Hidden) != 0)
+            {
+                Speed *= 1.18;
+            }
 
             /* acc pp ---------------------------------------------- */
             Acc = Math.Pow(1.52163, mapstats.OD) * Math.Pow(realAcc, 24.0) * 2.83;
