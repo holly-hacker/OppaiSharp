@@ -12,8 +12,8 @@
     <PackageLicenseUrl>https://github.com/HoLLy-HaCKeR/OppaiSharp/blob/master/LICENSE</PackageLicenseUrl>
     <RepositoryType>Git</RepositoryType>
     <PackageTags>osu! osu pp oppai</PackageTags>
-    <PackageReleaseNotes>Don't die on bad timingpoints or hitobjects</PackageReleaseNotes>
-    <Version>2.0.4</Version>
+    <PackageReleaseNotes>Updated for HD rebalance (thanks to Piotrekol!)</PackageReleaseNotes>
+    <Version>2.1</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
