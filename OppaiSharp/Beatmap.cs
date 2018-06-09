@@ -79,18 +79,8 @@ namespace OppaiSharp
             }
             set { _allObjects = value; }
         }
-        private List<Timing> AllTimingPoints { get; set; } = new List<Timing>(32);
-        private List<Timing> CutTimingPoints { get; set; } = new List<Timing>(32);
 
-        public List<Timing> TimingPoints
-        {
-            get
-            {
-                if (Cutting)
-                    return CutTimingPoints;
-                return AllTimingPoints;
-            }
-        }
+        public List<Timing> TimingPoints { get; set; } = new List<Timing>(32);
 
         public void Cut(int startTime, int endTime)
         {
@@ -109,23 +99,7 @@ namespace OppaiSharp
                     CutObjects.Add(o);
                 else
                     break;
-
             }
-            CutTimingPoints = new List<Timing>();
-            foreach (var t in AllTimingPoints)
-            {
-                //Assuming chronological order
-                if (t.Time < startTime)
-                    continue;
-                if (t.Time < endTime)
-                    CutTimingPoints.Add(t);
-                else 
-                    break;
-
-            }
-
-            if (CutTimingPoints.Count == 0 && AllTimingPoints.Count > 0)
-                CutTimingPoints.Add(AllTimingPoints[AllTimingPoints.Count - 1]);
 
             _cutCountCircles = 0;
             _cutCountSpinners = 0;
