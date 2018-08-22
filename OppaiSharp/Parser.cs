@@ -96,7 +96,7 @@ namespace OppaiSharp
 
                             if (splitted.Length > 8)
                                 Warn("timing point with trailing values");
-                            else if (splitted.Length < 7) {
+                            else if (splitted.Length < 2) {
                                 Warn("timing point with too little values");
                                 continue;
                             }
