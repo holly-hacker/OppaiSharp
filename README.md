@@ -4,6 +4,9 @@ OppaiSharp is a C# port of [oppai-ng](//github.com/Francesco149/oppai-ng) by [Fr
 
 It is "licensed" under the Unlicense, so you're free to do whatever you want with it. But giving me or Francesco149 a bit of credit doesn't hurt, and I would appreciate it if you didn't claim it as your own :)
 
+## Warning
+This repo is not up-to-date with the latest changes to the PP and SR algorithm, and has been superseded by the official implementation at [ppy/osu](https://github.com/ppy/osu). Please switch to using it.
+
 ## Example usage
 v2:
 ```cs
